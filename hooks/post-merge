@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Get the projects root directory
+PROJECT_ROOT=`git rev-parse --show-toplevel`
+
+# Get the operating system
+OS=`uname`
+
+# Load PROJECT_ROOT/.env
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    . "$PROJECT_ROOT/.env"
+fi
+
+# Check if $UNHOLLOWED_DIR has a value
+if [ -z "$UNHOLLOWED_DIR" ]; then
+    echo "UNHOLLOWED_DIR is not set"
+    exit 0
+fi
+
+# Update UnhollowedDllPath in SkanksAIO2.csproj
+sed -i "s,<UnhollowedDllPath>.*</UnhollowedDllPath>,<UnhollowedDllPath>${UNHOLLOWED_DIR}</UnhollowedDllPath>,g" "$PROJECT_ROOT/SkanksAIO2.csproj"
+
+# Update the post-build scripts in the csporj file based on the OS
+if [ "$OS" = "Linux" ]; then
+    echo "Linux"
+    sed -i "s,<Exec Command=".*" />,<Exec Command=\"cp bin/Debug/netstandard2.1/SkanksAIO2.dll \&quot;${UNHOLLOWED_DIR}/../plugins/\&quot;\&#xD;\&#xA;cp -r templates \&quot;${UNHOLLOWED_DIR}/../plugins/\&quot;\" />,gm" "${PROJECT_ROOT}/SkanksAIO2.csproj"
+else
+    echo "Windows"
+    sed -i "s,<Exec Command=".*" />,<Exec Command=\"copy /y \&quot;\$(TargetPath)\&quot; \&quot;${UNHOLLOWED_DIR}/../plugins/\&quot;\&#xD;\&#xA;xcopy /y /i templates \&quot;${UNHOLLOWED_DIR}/../plugins/templates\&quot;\" />,gm" "${PROJECT_ROOT}/SkanksAIO2.csproj"
+fi

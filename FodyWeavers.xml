@@ -1,0 +1,15 @@
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <Costura>
+    <IncludeAssemblies>
+      Newtonsoft.Json
+      System.Collections.Immutable
+      Discord.Net.Core
+      Discord.Net.Commands
+      Discord.Net.Rest
+      Discord.Net.WebSocket
+      UniTask
+      Scriban
+      LiteDB
+    </IncludeAssemblies>
+  </Costura>
+</Weavers>

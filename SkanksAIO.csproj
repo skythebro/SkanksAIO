@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+	<Nullable>enable</Nullable>
+
+    <AssemblyName>SkanksAIO</AssemblyName>
+    <Description>SkanksAIO Plugin for VRising Server</Description>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    
+    <UnhollowedDllPath>C:/Users/Endle/Desktop/VRising_Server/BepInEx/unhollowed</UnhollowedDllPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.IL2CPP" Version="6.0.0-*" IncludeAssets="compile" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+    <PackageReference Include="costura.fody" Version="5.7.0">
+      <IncludeAssets>runtime; compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Discord.net" Version="3.7.2" />
+    <PackageReference Include="Discord.net.commands" Version="3.7.2" />
+    <PackageReference Include="LiteDB" Version="5.0.12" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Scriban" Version="5.4.6" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="UniTask" Version="2.3.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+      <Reference Include="com.rlabrecque.steamworks.net">
+	    <HintPath>$(UnhollowedDllPath)/com.rlabrecque.steamworks.net.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Il2Cppmscorlib">
+	    <HintPath>$(UnhollowedDllPath)/Il2Cppmscorlib.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM.ScriptableSystems">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.ScriptableSystems.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM.Shared">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.Shared.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM.CodeGeneration">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.CodeGeneration.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM.Gameplay.Systems">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.Gameplay.Systems.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM.Misc.Systems">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.Misc.Systems.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ProjectM.Pathfinding">
+	    <HintPath>$(UnhollowedDllPath)/ProjectM.Pathfinding.dll</HintPath>
+	  </Reference>
+	  <Reference Include="com.stunlock.network">
+	    <HintPath>$(UnhollowedDllPath)/com.stunlock.network.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Stunlock.Core">
+	    <HintPath>$(UnhollowedDllPath)/Stunlock.Core.dll</HintPath>
+	  </Reference>
+	  <Reference Include="RCONServerLib">
+	    <HintPath>$(UnhollowedDllPath)/RCONServerLib.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Unity.Entities">
+	    <HintPath>$(UnhollowedDllPath)/Unity.Entities.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Unity.Collections">
+	    <HintPath>$(UnhollowedDllPath)/Unity.Collections.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine">
+	    <HintPath>$(UnhollowedDllPath)/UnityEngine.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.CoreModule">
+	    <HintPath>$(UnhollowedDllPath)/UnityEngine.CoreModule.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Unity.Mathematics">
+        <HintPath>$(UnhollowedDllPath)/Unity.Mathematics.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Mathematics.Extensions">
+        <HintPath>$(UnhollowedDllPath)/Unity.Mathematics.Extensions.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Mathematics.Extensions.Hybrid">
+        <HintPath>$(UnhollowedDllPath)/Unity.Mathematics.Extensions.Hybrid.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Transforms">
+        <HintPath>$(UnhollowedDllPath)/Unity.Transforms.dll</HintPath>
+      </Reference>
+  </ItemGroup>
+</Project>
