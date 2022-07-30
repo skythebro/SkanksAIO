@@ -1,5 +1,8 @@
 # 
-v1
+
+Honourable mentions for contributions before this repo was made with the current version: https://github.com/AviiNL/ & https://github.com/NopeyBoi
+
+v1 
 
 # Using the Git Hook
 
