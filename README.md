@@ -15,6 +15,9 @@ A V-Rising mod that conects your server to discord and a webserver.
 
 ---
 
+### webserver example (template included)
+![img.png](https://i.imgur.com/6dY9qUG.png)
+
 ### Commands are easily viewable using <ins>**/**</ins> on discord
 ![img.png](https://i.imgur.com/Uwy0B2V.png)
 
