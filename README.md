@@ -4,7 +4,7 @@ Forked from [phillipsOG](https://github.com/phillipsOG/SkanksAIO) and updated to
 A V-Rising mod that conects your server to discord and a webserver.
 
 ## Installation
-* Extract both folders into your (Vrising Server)\BepInEx\plugins folder.
+* Extract and put the **_SkanksAIO_** folder into your (Vrising Server)\BepInEx\plugins folder.
 * Start the server once to generate the config file.
 * Then edit the config file to your liking.
 
