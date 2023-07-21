@@ -113,6 +113,9 @@ ShowLeaderboardAsList = false
 Port = 8080
 ```
 
+# Support me!
+I have a Patreon now! So please support me [Here](https://www.patreon.com/user?u=97347013) You'll get early access to dev builds like this one!
+
 # Developer & credits
 <details>
 
