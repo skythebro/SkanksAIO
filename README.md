@@ -69,6 +69,12 @@ This command kicks the specified player.
 ---
 
 # Configuration file
+- <ins>**_ShowUserConnectedInDC_**</ins> This is a boolean if set to true the bot will announce when a user connects to the server.
+- <ins>**_ShowUserDisConnectedInDC_**</ins> This is a boolean if set to true the bot will announce when a user disconnects from the server.
+- <ins>**_AnnounceTimer_**</ins> This is the time between messages in seconds.
+- <ins>**_AnnounceEnabled_**</ins> This is a boolean if set to true the messages will be announced.
+- <ins>**_AnnounceRandomOrder_**</ins> This is a boolean if set to true the messages will be announced in a random order.
+- <ins>**_AnnounceMessages1-5_**</ins> These are the messages that'll get announced in the discord channel.
 - <ins>**_Token_**</ins> This is your discord bot token you'll have to make [one](https://discord.com/developers/applications) if you haven't already and then u can get it from your bot.
 - <ins>**_ChannelId_**</ins> This is the channel id of the channel you want the bot to post in.
 - <ins>**_AdminRoleId_**</ins> This is the role id of the adminrole, only users with the admin role will be able to run admin commands.
@@ -101,12 +107,64 @@ This command kicks the specified player.
 - I cannot guarantee it will work with online hosters like G-Portal!
 
 ```ini
+[Announcements]
+
+## Show in discord chat when users connect
+# Setting type: Boolean
+# Default value: true
+ShowUserConnectedInDC = true
+
+## Show in discord chat when users disconnect
+# Setting type: Boolean
+# Default value: true
+ShowUserDisConnectedInDC = true
+
+## Time between messages in seconds
+# Setting type: Single
+# Default value: 60
+AnnounceTimer = 60
+
+## Enable auto messages system
+# Setting type: Boolean
+# Default value: false
+AnnounceEnabled = false
+
+## Random order for announcement messages
+# Setting type: Boolean
+# Default value: false
+AnnounceRandomOrder = false
+
+## Message that will be announced
+# Setting type: String
+# Default value: 
+AnnounceMessage1 = This is message 1
+
+## Message that will be announced
+# Setting type: String
+# Default value: 
+AnnounceMessage2 = This is message 2
+
+## Message that will be announced
+# Setting type: String
+# Default value: 
+AnnounceMessage3 = This is message 3
+
+## Message that will be announced
+# Setting type: String
+# Default value: 
+AnnounceMessage4 = This is message 4
+
+## Message that will be announced
+# Setting type: String
+# Default value: 
+AnnounceMessage5 = This is message 5
+
 [Chat]
 
 ## Prefix for all chat commands
 # Setting type: String
-# Default value: .
-CommandPrefix = .
+# Default value: !
+CommandPrefix = !
 
 [Discord]
 
@@ -118,12 +176,12 @@ Token =
 ## Channel ID of the channel to post messages to
 # Setting type: UInt64
 # Default value: 0
-ChannelId = 
+ChannelId = 0
 
 ## ID of an Administrative role in your discord server.
 # Setting type: UInt64
 # Default value: 0
-AdminRoleId = 
+AdminRoleId = 0
 
 ## Title for embedded message
 # Setting type: String
@@ -147,10 +205,16 @@ ShowLeaderboardAsList = false
 
 [Web]
 
+## Enable the webserver
+# Setting type: Boolean
+# Default value: false
+Enable = false
+
 ## Port the webserver will run on
 # Setting type: Int32
 # Default value: 8080
 Port = 8080
+
 ```
 
 ---
