@@ -82,6 +82,7 @@ This command kicks the specified player.
 - <ins>**_Footer_**</ins> This is the footer text of the embed it will show up in the `/status`, `/time` and `/leaderboard` command.
 - <ins>**_FooterIcon_**</ins> This is the footer icon of the embed it will show up in the `/status`, `/time` and `/leaderboard` command (Make sure the link you put in there ends with any image file extension like `.png` or `.jpg`).
 - <ins>**_ShowLeaderboardAsList_**</ins> This is a boolean if set to true the leaderboard will be shown as a list instead of a grid.
+- <ins>**Enable**</ins> This is a boolean if set to true the webserver will run.
 - <ins>**_Port_**</ins> This is the port the webserver will run on (leave this as <ins>**_default_**</ins> if you don't use this port for any other service on your computer!).
 
 ---
