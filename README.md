@@ -137,27 +137,27 @@ AnnounceRandomOrder = false
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage1 = This is message 1
+AnnounceMessage1 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage2 = This is message 2
+AnnounceMessage2 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage3 = This is message 3
+AnnounceMessage3 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage4 = This is message 4
+AnnounceMessage4 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage5 = This is message 5
+AnnounceMessage5 =
 
 [Chat]
 
