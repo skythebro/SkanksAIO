@@ -82,8 +82,11 @@ This command kicks the specified player.
 - <ins>**_Footer_**</ins> This is the footer text of the embed it will show up in the `/status`, `/time` and `/leaderboard` command.
 - <ins>**_FooterIcon_**</ins> This is the footer icon of the embed it will show up in the `/status`, `/time` and `/leaderboard` command (Make sure the link you put in there ends with any image file extension like `.png` or `.jpg`).
 - <ins>**_ShowLeaderboardAsList_**</ins> This is a boolean if set to true the leaderboard will be shown as a list instead of a grid.
+- <ins>**_EnableVIP_**</ins> This is a boolean if set to true the VIP functionality will be enabled. Just like you would add your admins steamid64 to the adminlist.txt now you add the steamid64 to the SkanksAIO.VIPlist.txt file (check config for more info). For your VIP users. This allows VIP's to ignore the servers player limit.
+- <ins>**_Enable_**</ins> This is a boolean if set to true the webserver will be enabled.
 - <ins>**_Port_**</ins> This is the port the webserver will run on (leave this as <ins>**_default_**</ins> if you don't use this port for any other service on your computer!).
-
+- <ins>**_EnableInteractiveMap_**</ins> This is a boolean if set to true the interactive map will be enabled (WIP).
+- <ins>**_InteractiveMapUpdateInterval_**</ins> This is the interval in seconds for the interactive map to update (WIP).
 ---
 
 # Video tutorial for setting up discord bot and extra info
@@ -104,7 +107,7 @@ This command kicks the specified player.
 ---
 
 ### DISCLAIMER
-- I cannot guarantee it will work with online hosters like G-Portal!
+- I cannot guarantee it will work on linux hosted servers!
 
 ```ini
 [Announcements]
@@ -137,27 +140,27 @@ AnnounceRandomOrder = false
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage1 = This is message 1
+AnnounceMessage1 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage2 = This is message 2
+AnnounceMessage2 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage3 = This is message 3
+AnnounceMessage3 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage4 = This is message 4
+AnnounceMessage4 =
 
 ## Message that will be announced
 # Setting type: String
 # Default value: 
-AnnounceMessage5 = This is message 5
+AnnounceMessage5 =
 
 [Chat]
 
@@ -176,12 +179,12 @@ Token =
 ## Channel ID of the channel to post messages to
 # Setting type: UInt64
 # Default value: 0
-ChannelId = 0
+ChannelId = 
 
 ## ID of an Administrative role in your discord server.
 # Setting type: UInt64
 # Default value: 0
-AdminRoleId = 0
+AdminRoleId = 
 
 ## Title for embedded message
 # Setting type: String
@@ -203,6 +206,13 @@ FooterIcon =
 # Default value: false
 ShowLeaderboardAsList = false
 
+[VIP]
+
+## Enables the VIP functionality. the txt file will generate in the bepInEx config folder SkanksAIO/SkanksAIO.VIPlist.txt folder after restart. This txt file will be read at startup or when reloading. To add a user to VIP you need to add their steamid64 to the file. (1 per line)
+# Setting type: Boolean
+# Default value: false
+EnableVIP = false
+
 [Web]
 
 ## Enable the webserver
@@ -215,6 +225,15 @@ Enable = false
 # Default value: 8080
 Port = 8080
 
+## Enables the interactive map
+# Setting type: Boolean
+# Default value: false
+EnableInteractiveMap = false
+
+## Interval in seconds for the interactive map to update
+# Setting type: Int32
+# Default value: 30
+InteractiveMapUpdateInterval = 30
 ```
 
 ---
