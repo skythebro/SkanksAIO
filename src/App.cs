@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using BepInEx.Core.Logging.Interpolation;
 using Discord.WebSocket;
+using ProjectM;
 using ProjectM.Network;
 using SkanksAIO.Chat;
 using SkanksAIO.Discord;
@@ -13,14 +16,16 @@ public class App : MonoBehaviour
 {
     internal static App? Instance { get; private set; }
 
-    internal DiscordCommandLib Discord;
+    internal DiscordCommandLib? Discord;
 
-    internal ChatCommandLib Chat;
+    internal ChatCommandLib? Chat;
+
+    internal float _currenttime;
 
     public App()
     {
-        App.Instance = this;
-        Discord = new DiscordCommandLib(Plugin.Instance!.Token!.Value);
+        Instance = this;
+        Discord = new DiscordCommandLib(Settings.Token!.Value);
         Discord.Ready += OnReady;
         Chat = new ChatCommandLib();
     }
@@ -30,9 +35,61 @@ public class App : MonoBehaviour
         Chat.Init();
     }
 
-    private Task OnMessageReceived(SocketUserMessage message)
+    public void Restart()
     {
-        Messaging.SendGlobalMessage(ServerChatMessageType.Global, $"[Discord] {message.Author.Username}: {message.Content}");
+        if (Discord == null || Chat == null || Instance == null)
+        {
+            Instance = this;
+            Discord = new DiscordCommandLib(Settings.Token!.Value);
+            Chat = new ChatCommandLib();
+            Discord.Ready += OnReady;
+            Chat.Init();
+        }
+
+        Stop();
+        _currenttime = JsonConfigHelper.GetAnnouncementInterval();
+        announcementCount = JsonConfigHelper.GetAnnouncements().Count;
+        Start();
+    }
+
+    private int announcementCount = JsonConfigHelper.GetAnnouncements().Count;
+
+    private void Update()
+    {
+        if (!Settings.AnnounceEnabled.Value || JsonConfigHelper.GetAnnouncements().Count == 0) return;
+        _currenttime += Time.deltaTime;
+        if (!(_currenttime >= JsonConfigHelper.GetAnnouncementInterval())) return;
+
+        Plugin.Logger?.LogDebug("Posting announcement: " + JsonConfigHelper.GetAnnouncements()[Settings.LastEntry]);
+        Discord?.SendMessageAsync(JsonConfigHelper.GetAnnouncements()[Settings.LastEntry], isAnnouncement: true);
+
+        // Make sure there are at least two announcements before attempting to select a different one
+        if (Settings.AnnounceRandomOrder.Value && announcementCount > 1)
+        {
+            int nextIndex;
+            do
+            {
+                nextIndex = Settings.Random.Next(0, announcementCount);
+            } while (nextIndex == Settings.LastEntry);
+
+            Settings.LastEntry = nextIndex;
+        }
+        else
+        {
+            Settings.LastEntry++;
+            if (Settings.LastEntry == JsonConfigHelper.GetAnnouncements().Count)
+            {
+                Settings.LastEntry = 0;
+            }
+        }
+
+        _currenttime = 0f;
+    }
+
+    private static Task OnMessageReceived(SocketUserMessage message)
+    {
+        Messaging.SendGlobalMessage(ServerChatMessageType.Global,
+            $"[Discord] {message.Author.Username}: {message.Content}");
         Plugin.Logger?.LogInfo($"[Discord] {message.Author.Username}: {message.Content}");
 
         return Task.CompletedTask;
@@ -40,15 +97,16 @@ public class App : MonoBehaviour
 
     private void Start()
     {
-        if (!String.IsNullOrEmpty(Plugin.Instance!.Token!.Value))
+        if (!string.IsNullOrEmpty(Settings.Token!.Value))
         {
+            this._currenttime = 0f;
             StartCoroutine(nameof(CoroutineStart));
         }
     }
 
     internal void Stop()
     {
-        if (!String.IsNullOrEmpty(Plugin.Instance!.Token!.Value))
+        if (!string.IsNullOrEmpty(Settings.Token!.Value))
         {
             StartCoroutine(nameof(CoroutineStop));
         }

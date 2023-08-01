@@ -17,16 +17,12 @@ public static class IntExtensions
                 return "th";
         }
 
-        switch (self % 10)
+        return (self % 10) switch
         {
-            case 1:
-                return "st";
-            case 2:
-                return "nd";
-            case 3:
-                return "rd";
-            default:
-                return "th";
-        }
+            1 => "st",
+            2 => "nd",
+            3 => "rd",
+            _ => "th"
+        };
     }
 }

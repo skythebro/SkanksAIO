@@ -6,12 +6,11 @@ namespace SkanksAIO.Web;
 
 class WebBehaviour : MonoBehaviour
 {
-    public delegate void RequestReceived(HttpListenerContext context);
     public event RequestReceived? OnRequestReceived;
 
     public static WebBehaviour? Instance { get; private set; }
 
-    private Queue<HttpListenerContext> requestQueue = new Queue<HttpListenerContext>();
+    private Queue<HttpListenerContext> requestQueue = new();
 
     public WebBehaviour()
     {

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Bloodstone.API;
 using Unity.Entities;
 
 namespace SkanksAIO.Chat;
@@ -14,6 +15,8 @@ internal class ChatCommandLib
 {
     private Dictionary<string, CommandInfo> commands { get; set; } = new Dictionary<string, CommandInfo>();
 
+    
+    
     internal void Init()
     {
         var types = Assembly.GetExecutingAssembly().GetTypes()
@@ -34,17 +37,17 @@ internal class ChatCommandLib
 
     internal bool Handle(Entity chatMessageEntity)
     {
-        var em = Plugin.World.EntityManager;
-        var chatMessageEvent = em.GetComponentData<ChatMessageEvent>(chatMessageEntity);
+        var em = VWorld.Server.EntityManager;
+        em.TryGetComponentData<ChatMessageEvent>(chatMessageEntity, out var chatMessageEvent);
         var rawMessage = chatMessageEvent.MessageText.ToString();
-        if (!rawMessage.StartsWith(Plugin.Instance!.ChatCommandPrefix.Value)) return true;
+        if (!rawMessage.StartsWith(Settings.ChatCommandPrefix.Value)) return true;
 
-        var fromCharacter = em.GetComponentData<FromCharacter>(chatMessageEntity);
-        var user = em.GetComponentData<User>(fromCharacter.User);
-        var character = em.GetComponentData<PlayerCharacter>(fromCharacter.Character);
+        em.TryGetComponentData<FromCharacter>(chatMessageEntity, out var fromCharacter);
+        em.TryGetComponentData<User>(fromCharacter.User, out var user);
+        em.TryGetComponentData<PlayerCharacter>(fromCharacter.Character, out var character);
         var arguments = rawMessage.Split(' ').ToList();
 
-        var command = arguments.Shift().Substring(Plugin.Instance!.ChatCommandPrefix.Value.Length);
+        var command = arguments.Shift()[Settings.ChatCommandPrefix.Value.Length..];
 
         if (!commands.ContainsKey(command))
         {
@@ -59,7 +62,7 @@ internal class ChatCommandLib
             return true;
         }
 
-        var instance = (AbstractChatCommandsHandler)Activator.CreateInstance(method.DeclaringType, new object[] { fromCharacter, rawMessage, user });
+        var instance = (AbstractChatCommandsHandler)Activator.CreateInstance(method.DeclaringType, new object[] { fromCharacter, rawMessage, user })!;
 
         if (method.GetCustomAttribute<AdminAttribute>() != null && !user.IsAdmin)
         {
@@ -71,12 +74,12 @@ internal class ChatCommandLib
         var parameters = new List<object>();
         var getParameters = method.GetParameters().ToList();
 
-        for (int i = 0; i < getParameters.Count; i++)
+        for (var i = 0; i < getParameters.Count; i++)
         {
             var parameter = getParameters[i];
 
             if (arguments.Count == 0 && parameter.HasDefaultValue) {
-                parameters.Add(parameter.DefaultValue);
+                parameters.Add(parameter.DefaultValue!);
                 continue;
             }
 
@@ -150,5 +153,10 @@ internal class ChatCommandLib
             Plugin.Logger?.LogError("Unable to auto-cast " + input + " to " + t.Name);
             return input;
         }
+    }
+
+    public void OnchatMessage()
+    {
+        
     }
 }

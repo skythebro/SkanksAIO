@@ -4,7 +4,7 @@ using BepInEx.Logging;
 
 namespace SkanksAIO.Logger.Handler;
 
-class ConsoleLogHandler : ILogHandler
+internal class ConsoleLogHandler : ILogHandler
 {
     public bool Accept(LogLevel level)
     {

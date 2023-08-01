@@ -6,7 +6,7 @@ using SkanksAIO.Utils;
 
 namespace SkanksAIO.Logger.Handler;
 
-class DiscordLogHandler : ILogHandler
+internal class DiscordLogHandler : ILogHandler
 {
     public bool Accept(LogLevel level)
     {

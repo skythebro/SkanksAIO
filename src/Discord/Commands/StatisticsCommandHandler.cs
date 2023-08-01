@@ -27,18 +27,18 @@ internal class StatisticsCommandHandler
 
         // Get the amount of online players
         var onlineUsers = UserUtils.GetOnlineUsers();
-        var onlineCount = onlineUsers.Count();
+        var onlineCount = onlineUsers.Count; //onlineUsers.Count();
 
         builder.AddField("Online Players", onlineCount.ToString(), true);
 
         // Total PVP Kills
-        var pvpKills = Player.GetRepository.FindAll()
+        var pvpKills = Player.GetPlayerRepository.FindAll()
             .Sum(x => x.Kills);
         
         builder.AddField("Total PVP Kills", pvpKills.ToString(), true);
 
         // Average ELO Score
-        var averageElo = (int)Math.Round(Player.GetRepository.FindAll()
+        var averageElo = (int)Math.Round(Player.GetPlayerRepository.FindAll()
             .Average(x => x.ELO));
 
         builder.AddField("Average Player Rating", averageElo.ToString(), true); // should this not always evaluate to 1000?

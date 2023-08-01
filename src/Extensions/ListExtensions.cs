@@ -7,7 +7,7 @@ public static class ListExtensions
     /// </summary>
     public static T Pop<T>(this System.Collections.Generic.List<T> self)
     {
-        T r = self[self.Count - 1];
+        var r = self[self.Count - 1];
         self.RemoveAt(self.Count - 1);
         return r;
     }

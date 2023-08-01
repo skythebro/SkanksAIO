@@ -4,14 +4,96 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
+    <link rel="icon"
+          href="https://cdn2.steamgriddb.com/file/sgdb-cdn/icon/9e1c574347088c9225f323757f547b06/32/96x96.png"
+          type="image/x-icon">
+    <title>Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('https://images3.alphacoders.com/120/1208233.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .container {
+            max-width: 1000px;
+            background-color: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border-radius: 0 0 5px 5px;
+            padding: 40px 80px 40px 80px;
+            color: #fff;
+            overflow-y: auto;
+            max-height: 50vh;
+            position: relative;
+        }
+
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding-bottom: 5px;
+            border-radius: 5px 5px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #e63946;
+            background-color: rgba(0, 0, 0, 0.7); /* Added semi-transparent background color */
+            padding: 10px; /* Added padding to create space around the heading */
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ccc;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        p {
+            font-size: 14px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<ul>
-    {{ for user in users }}
-        <li>{{ user.character_name }} - Kills: {{ user.kills }} - Deaths: {{ user.deaths }} - KD: {{ user.kd }} - ELO: {{ user.elo }}</li>
-    {{ end }}
-</ul>
-
+<div>
+    <div class="header">
+        <h1>Leaderboard</h1>
+    </div>
+    <div class="container">
+        <ul>
+            {{ for user in users }}
+            <li>{{ user.character_name }} -
+                Kills: <span style="color: {{ user.kills > 0 ? 'green' : 'white' }}">{{ user.kills }}</span> -
+                Deaths: <span style="color: {{ user.deaths > 0 ? 'red' : 'white' }}">{{ user.deaths }}</span> -
+                KD: <span style="color: {{ user.kd > 1.2 ? 'green' : 'orange' }}">{{ user.kd }}</span> -
+                ELO: <span style="color: {{ user.elo > 1500 ? 'green' : 'orange' }}">{{ user.elo }}</span>
+            </li>
+            {{ end }}
+        </ul>
+        <p>Additional information or footer content can go here.</p>
+    </div>
+</div>
 </body>
 </html>

@@ -8,10 +8,10 @@ namespace SkanksAIO.Discord;
 
 public class CommandInfo
 {
-    public string Name { get; }
-    public string Description { get; }
+    private string Name { get; }
+    private string Description { get; }
     public MethodInfo Handler { get; }
-    public SlashCommandBuilder commandBuilder {get;}
+    public SlashCommandBuilder CommandBuilder {get;}
 
     public CommandInfo(string name, string description, MethodInfo handler)
     {
@@ -19,6 +19,6 @@ public class CommandInfo
         Description = description;
         Handler = handler;
 
-        commandBuilder = new SlashCommandBuilder();
+        CommandBuilder = new SlashCommandBuilder();
     }
 }

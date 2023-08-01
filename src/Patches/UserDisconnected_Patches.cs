@@ -1,8 +1,15 @@
+using System;
+using System.Linq;
+using Bloodstone.API;
 using HarmonyLib;
+using Il2CppInterop.Runtime;
 using ProjectM;
 using ProjectM.Network;
 using SkanksAIO.Models;
+using SkanksAIO.Utils;
 using Stunlock.Network;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace SkanksAIO.Patches;
 
@@ -11,27 +18,32 @@ public static class UserDisconnected_Patches
 {
     [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserDisconnected))]
     [HarmonyPrefix]
-    public static void OnUserDisconnected_Patch(ServerBootstrapSystem __instance, NetConnectionId netConnectionId, ConnectionStatusChangeReason connectionStatusReason, string extraData)
+    public static void OnUserDisconnected_Patch(ServerBootstrapSystem __instance, NetConnectionId netConnectionId,
+        ConnectionStatusChangeReason connectionStatusReason, string extraData)
     {
-        var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
-        var serverClient = __instance._ApprovedUsersLookup[userIndex];
-        var userEntity = serverClient.UserEntity;
-
-        var user = __instance.EntityManager.GetComponentData<User>(userEntity);
-
-        var player = Player.GetRepository
-            .FindOne(x => x.PlatformId == user.PlatformId);
-
-        if (player == null || user.CharacterName.IsEmpty)
+        if (Settings.ShowUserDisConnectedInDc.Value)
         {
-            Plugin.Logger?.LogDebug("A user has disconnected from the Character Creation screen.");
-            
-            App.Instance?.Discord.SendMessageAsync("A player has disconnected from the Character Creation screen.");
+            var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
+            var serverClient = __instance._ApprovedUsersLookup[userIndex];
+            var userEntity = serverClient.UserEntity;
 
-            return;
+            var user = __instance.EntityManager.GetComponentData<User>(userEntity);
+
+            var player = Player.GetPlayerRepository
+                .FindOne(x => x.PlatformId == user.PlatformId);
+
+            if (player == null || user.CharacterName.IsEmpty)
+            {
+                Plugin.Logger?.LogDebug("A user has disconnected from the Character Creation screen.");
+                var defMessage = JsonConfigHelper.GetDefaultMessage("newUserOffline");
+                App.Instance.Discord.SendMessageAsync(defMessage);
+                return;
+            }
+
+            Plugin.Logger?.LogDebug($"{player.CharacterName} disconnected.");
+            var message = JsonConfigHelper.GetOfflineMessage(player.CharacterName!);
+            message = message.Replace("%user%", player.CharacterName!);
+            App.Instance.Discord.SendMessageAsync(message);
         }
-
-        Plugin.Logger?.LogDebug($"{player.CharacterName} disconnected.");
-        App.Instance?.Discord.SendMessageAsync($"{player.CharacterName} disconnected.");
     }
 }

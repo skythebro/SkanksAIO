@@ -1,4 +1,7 @@
+using System;
 using System.Threading.Tasks;
+using Bloodstone.API;
+using Bloodstone.Hooks;
 using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
@@ -32,26 +35,45 @@ public static class Chat_Pathces
                     // It's a performance hit, if it needs to run through this entire thing again for the remaining entries.
                     // Although I don't know how this stuff works under the hood, it'd be better to find a way without a return inside the loop.
                 }
-                
-                SendMessageToDiscord(em, entity);
+
+                em.TryGetComponentData<User>(entity, out var user);
+
+                SendMessageToDiscord(em, entity, user.IsAdmin);
             }
+
             return true;
         }
-        catch
+        catch (Exception e)
         {
+            Plugin.Logger?.LogDebug($"Just errored in the ChatUpdatePatch method: " + e.Message);
             return true;
         }
     }
 
-    private static void SendMessageToDiscord(EntityManager em, Entity entity)
+    private static void SendMessageToDiscord(EntityManager em, Entity entity, bool isAdmin)
     {
         var chatMessageEvent = em.GetComponentData<ChatMessageEvent>(entity);
+        Plugin.Logger?.LogDebug($"checking if message is global: {chatMessageEvent.MessageText}");
         if (chatMessageEvent.MessageType == ChatMessageType.Global)
         {
+            Plugin.Logger?.LogDebug($"Just got a global message: {chatMessageEvent.MessageText}");
             var fromCharacter = em.GetComponentData<FromCharacter>(entity);
             var user = em.GetComponentData<User>(fromCharacter.User);
-            Plugin.Logger?.LogDebug($"[Chat] {user.CharacterName}: {chatMessageEvent.MessageText}");
-            var _ = App.Instance!.Discord.SendMessageAsync($"[GLOBAL] {user.CharacterName}: {chatMessageEvent.MessageText}");
+
+            if (isAdmin)
+            {
+                Plugin.Logger?.LogDebug($"[Chat][Admin] {user.CharacterName}: {chatMessageEvent.MessageText}");
+                var _ = App.Instance.Discord.SendMessageAsync(
+                    $"[GLOBAL][Admin]{0}: {1} {user.CharacterName}: {chatMessageEvent.MessageText}");
+            }
+            else
+            {
+                Plugin.Logger?.LogDebug($"[Chat] {user.CharacterName}: {chatMessageEvent.MessageText}");
+                var _ = App.Instance.Discord.SendMessageAsync(
+                    $"[GLOBAL] {user.CharacterName}: {chatMessageEvent.MessageText}");
+            }
         }
+
+        Plugin.Logger?.LogDebug($"Just got a non global message: {chatMessageEvent.MessageText}");
     }
 }

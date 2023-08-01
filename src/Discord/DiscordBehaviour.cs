@@ -9,14 +9,12 @@ class DiscordBehaviour : MonoBehaviour
 {
     public delegate Task MessageReceivedHandler(SocketMessage message);
     public event MessageReceivedHandler? MessageReceived;
-
-    public delegate Task SlashCommandExecutedHandler(SocketSlashCommand command);
-    public event SlashCommandExecutedHandler? SlashCommandExecuted;
+    public event SlashCommandDelegate.SlashCommandExecutedHandler? SlashCommandExecuted;
 
     public static DiscordBehaviour? Instance { get; private set; }
 
-    private Queue<SocketMessage> messageQueue = new Queue<SocketMessage>();
-    private Queue<SocketSlashCommand> slashCommandQueue = new Queue<SocketSlashCommand>();
+    private Queue<SocketMessage> messageQueue = new();
+    private Queue<SocketSlashCommand> slashCommandQueue = new();
 
     public DiscordBehaviour()
     {
