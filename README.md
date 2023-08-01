@@ -5,8 +5,9 @@ A V-Rising mod that conects your server to discord and a webserver.
 
 ## Installation
 * Extract and put the **_SkanksAIO_** folder into your `(Vrising Server)\BepInEx\plugins folder.`
-* Start the server once to generate the config file.
-* Then edit the config file to your liking.
+* Start the server once to generate the config file and json files.
+* Then edit the config in `(Vrising Server)\BepInEx\config` and the Json files in `(Vrising Server)\BepInEx\config\SkanksAIO`
+* Be sure to check out the [configurations](#configurations) section for more info on the config and json files.
 * The database will generate in `plugins\SkanksAIO\config`
 * If you for some reason want to edit the database you'll need [LiteDB.Studio](https://github.com/mbdavid/LiteDB.Studio/releases) and database management knowledge.
 
@@ -68,25 +69,88 @@ This command kicks the specified player.
 
 ---
 
-# Configuration file
+
+
+---
+
+# Configurations
 - <ins>**_ShowUserConnectedInDC_**</ins> This is a boolean if set to true the bot will announce when a user connects to the server.
 - <ins>**_ShowUserDisConnectedInDC_**</ins> This is a boolean if set to true the bot will announce when a user disconnects from the server.
 - <ins>**_AnnounceTimer_**</ins> This is the time between messages in seconds.
 - <ins>**_AnnounceEnabled_**</ins> This is a boolean if set to true the messages will be announced.
 - <ins>**_AnnounceRandomOrder_**</ins> This is a boolean if set to true the messages will be announced in a random order.
-- <ins>**_AnnounceMessages1-5_**</ins> These are the messages that'll get announced in the discord channel.
 - <ins>**_Token_**</ins> This is your discord bot token you'll have to make [one](https://discord.com/developers/applications) if you haven't already and then u can get it from your bot.
 - <ins>**_ChannelId_**</ins> This is the channel id of the channel you want the bot to post in.
+- <ins>**_AnnounceChannelId_**</ins> This is the channel id of the channel you want the bot to post the announcements in. (leave default if you want it to be the same channel as <ins>**_ChannelId_**</ins>)
 - <ins>**_AdminRoleId_**</ins> This is the role id of the adminrole, only users with the admin role will be able to run admin commands.
 - <ins>**_Title_**</ins> This is the title text of the embed it will show up in the `/status`, `/time` and `/leaderboard` command.
 - <ins>**_Footer_**</ins> This is the footer text of the embed it will show up in the `/status`, `/time` and `/leaderboard` command.
 - <ins>**_FooterIcon_**</ins> This is the footer icon of the embed it will show up in the `/status`, `/time` and `/leaderboard` command (Make sure the link you put in there ends with any image file extension like `.png` or `.jpg`).
 - <ins>**_ShowLeaderboardAsList_**</ins> This is a boolean if set to true the leaderboard will be shown as a list instead of a grid.
-- <ins>**_EnableVIP_**</ins> This is a boolean if set to true the VIP functionality will be enabled. Just like you would add your admins steamid64 to the adminlist.txt now you add the steamid64 to the SkanksAIO.VIPlist.txt file (check config for more info). For your VIP users. This allows VIP's to ignore the servers player limit.
+- <ins>**_EnablePvPkillTracker_**</ins> This is a boolean if set to true PvP kill tracking will be enabled (more info in config).
+- <ins>**_EnableVIP_**</ins> This is a boolean if set to true the VIP functionality will be enabled. Just like you would add your admins steamid64 to the adminlist.txt now you add the steamid64 to the Vips.json file (check config for more info). For your VIP users. This allows VIP's to ignore the servers player limit.
 - <ins>**_Enable_**</ins> This is a boolean if set to true the webserver will run.
 - <ins>**_Port_**</ins> This is the port the webserver will run on (leave this as <ins>**_default_**</ins> if you don't use this port for any other service on your computer!).
 - <ins>**_EnableInteractiveMap_**</ins> This is a boolean if set to true the interactive map will be enabled (WIP).
 - <ins>**_InteractiveMapUpdateInterval_**</ins> This is the interval in seconds for the interactive map to update (WIP).
+
+## Json file configurations
+### Announcements.json
+This file contains a list of announcement messages. These messages will randomly or not (<ins>**_AnnounceRandomOrder_**</ins>) be sent every (<ins>**_AnnounceTimer_**</ins> seconds) in the announcement discord channel or default channel (if <ins>**_AnnounceEnabled_**</ins> is true). You can add as many as you want.
+ 
+```json
+["Announcement 1","Announcement 2","Announcement 3"]
+```
+
+### Messages.json
+This file contains the default messages for each of the logon/logoff events. They'll get sent to the discord channel when a user connects or disconnects.
+- %user% will get replaced with the username of the user that connected/disconnected.
+- The newUserOnline and newUserOffline options cannot have %user% because the player won't have a name yet.
+- The newUserCreatedCharacter message gets sent when a user finishes character creation.
+
+```json
+{
+  "online":"%user% is online!", 
+  "offline":"%user% has gone offline!",
+  "newUserCreatedCharacter":"%user% has finished character creation!",
+  "newUserOnline":"A new vampire just joined!",
+  "newUserOffline":"A vampire left before finishing character creation"
+}
+```
+
+### OfflineMessage.json
+This file can be filled with custom logoff messages for specific users.
+- %user% will be replaced with the username of the user that disconnected.
+
+```json
+{
+  "CharacterName":"%user% went offline...",
+  "CharacterName2":"Where did %user% go? They went offline..."
+}
+```
+
+### OnlineMessage.json
+This file can be filled with custom logon messages for specific users.
+- %user% will be replaced with the username of the user that connected.
+
+```json
+{
+  "CharacterName":"%user% is back baby!",
+  "CharacterName2":"The best V rising player: %user% is here!"
+}
+```
+
+### Vips.json
+This file can be filled with steamid64's of VIP users. (Previously known as SkanksAIO.VIPlist.txt, be sure to add the steamid64's to the json instead of the old txt one!)
+
+```json
+[
+  76561197960000000,
+  76561197960000001,
+  76561197960000002
+]
+```
+
 ---
 
 # Video tutorial for setting up discord bot and extra info
@@ -124,8 +188,8 @@ ShowUserDisConnectedInDC = true
 
 ## Time between messages in seconds
 # Setting type: Single
-# Default value: 60
-AnnounceTimer = 60
+# Default value: 180
+AnnounceTimer = 180
 
 ## Enable auto messages system
 # Setting type: Boolean
@@ -136,31 +200,6 @@ AnnounceEnabled = false
 # Setting type: Boolean
 # Default value: false
 AnnounceRandomOrder = false
-
-## Message that will be announced
-# Setting type: String
-# Default value: 
-AnnounceMessage1 =
-
-## Message that will be announced
-# Setting type: String
-# Default value: 
-AnnounceMessage2 =
-
-## Message that will be announced
-# Setting type: String
-# Default value: 
-AnnounceMessage3 =
-
-## Message that will be announced
-# Setting type: String
-# Default value: 
-AnnounceMessage4 =
-
-## Message that will be announced
-# Setting type: String
-# Default value: 
-AnnounceMessage5 =
 
 [Chat]
 
@@ -180,6 +219,11 @@ Token =
 # Setting type: UInt64
 # Default value: 0
 ChannelId = 0
+
+## Channel ID of the channel to post Announcements to (leave default if you want it to be in the same channel as the ChannelId) setting
+# Setting type: UInt64
+# Default value: 0
+AnnounceChannelId = 0
 
 ## ID of an Administrative role in your discord server.
 # Setting type: UInt64
@@ -206,9 +250,16 @@ FooterIcon =
 # Default value: false
 ShowLeaderboardAsList = false
 
+[Server]
+
+## Enables the PvP Kill Tracker. Warning: if disabled ELO wont update when killing other players (because it doesnt track kills anymore (only applicable to PvP)).
+# Setting type: Boolean
+# Default value: true
+EnablePvPKillTracker = true
+
 [VIP]
 
-## Enables the VIP functionality. the txt file will generate in the bepInEx config folder SkanksAIO/SkanksAIO.VIPlist.txt folder after restart. This txt file will be read at startup or when reloading. To add a user to VIP you need to add their steamid64 to the file. (1 per line)
+## Enables the VIP functionality. The json file will generate in the bepInEx config folder SkanksAIO/Vips.json folder after restart. This json file will be read at startup or when reloading. To add a user to VIP you need to add their steamid64 to the file.
 # Setting type: Boolean
 # Default value: false
 EnableVIP = false
@@ -239,7 +290,7 @@ InteractiveMapUpdateInterval = 30
 ---
 
 # Support me!
-I have a Patreon now! So please support me [Here](https://www.patreon.com/user?u=97347013) You'll get early access to dev builds like this one!
+I have a Patreon now! So please support me [Here](https://www.patreon.com/user?u=97347013) if you want to.
 
 # Developer & credits
 <details>
