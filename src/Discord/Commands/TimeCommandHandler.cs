@@ -5,6 +5,8 @@ using ProjectM.Gameplay.Systems;
 using SkanksAIO.Discord.Attributes;
 using SkanksAIO.Utils;
 using System.Threading.Tasks;
+using Bloodstone.API;
+using ProjectM.Scripting;
 
 namespace SkanksAIO.Discord.Commands;
 
@@ -17,25 +19,28 @@ internal class TimeCommandHandler
         var builder = DiscordUtils.CreateEmbedBuilder("Time")
             .WithColor(0x18, 0xf7, 0xf7);
 
-        var em = WorldUtility.FindWorld("Server").EntityManager;
-        var gameplaySystem = WorldUtility.FindWorld("Server").GetExistingSystem<HandleGameplayEventsSystem>();
-        var access = gameplaySystem._DayNightCycle.GetSingletonEntity();
-        var dnc = em.GetComponentData<DayNightCycle>(access);
-        var now = dnc.GameDateTimeNow;
+        var em = VWorld.Server.EntityManager;
+        if (!VWorld.Server.GetExistingSystem<ServerScriptMapper>()._DayNightCycleAccessor.TryGetSingleton(out var dayNightCycle))
+        {
+            Plugin.Logger.LogWarning("Couldnt get access to DayNightCycle Singleton");
+            return;
+        }
+        
+        var now = dayNightCycle.GameDateTimeNow;
 
-        var year = string.Format("{0:0000}", now.Year);
-        var month = string.Format("{0:00}", now.Month);
-        var day = string.Format("{0:00}", now.Day);
-        var hour = string.Format("{0:00}", now.Hour);
-        var minute = string.Format("{0:00}", now.Minute);
+        var year = $"{now.Year:0000}";
+        var month = $"{now.Month:00}";
+        var day = $"{now.Day:00}";
+        var hour = $"{now.Hour:00}";
+        var minute = $"{now.Minute:00}";
 
-        var dayStartHour = dnc.DayTimeStartInSeconds / (dnc.DayDurationInSeconds / 24);
-        var dayEndHour = dayStartHour + (dnc.DayTimeDurationInSeconds / (dnc.DayDurationInSeconds / 24));
+        var dayStartHour = dayNightCycle.DayTimeStartInSeconds / (dayNightCycle.DayDurationInSeconds / 24);
+        var dayEndHour = dayStartHour + (dayNightCycle.DayTimeDurationInSeconds / (dayNightCycle.DayDurationInSeconds / 24));
 
-        bool isBMD = dnc.IsBloodMoonDay();
-        string isDay = dnc.TimeOfDay == TimeOfDay.Day ? "Day" : "Night";
+        bool isBmd = dayNightCycle.IsBloodMoonDay();
+        string isDay = dayNightCycle.TimeOfDay == TimeOfDay.Day ? "Day" : "Night";
 
-        builder.AddField($"The current time on {Plugin.Instance!.MessageTitle.Value} is: ", $"**{hour}**:**{minute}** - **[{isDay}]**");
+        builder.AddField($"The current time on {Settings.MessageTitle.Value} is: ", $"**{hour}**:**{minute}** - **[{isDay}]**");
 
         await ctx.RespondAsync(embed: builder.Build());
     }

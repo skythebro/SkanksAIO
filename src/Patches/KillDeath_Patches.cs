@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Bloodstone.API;
 using Discord;
 using HarmonyLib;
 using ProjectM;
+using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
 using SkanksAIO.Models;
 using SkanksAIO.Utils;
@@ -14,43 +16,35 @@ namespace SkanksAIO.Patches;
 [HarmonyPatch]
 public static class KillDeath_Patches
 {
-    [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.ApplyHealthChangeToEntity))]
+    [HarmonyPatch(typeof(DeathEventListenerSystem), nameof(DeathEventListenerSystem.OnUpdate))]
     [HarmonyPostfix]
-    public static void OnApplyHealthChangeToEntity_Patch(StatChangeSystem __instance, Entity statChangeEntity, StatChangeEvent statChange, EntityCommandBufferSafe commandBuffer, double currentTime)
+    public static void OnUpdate(DeathEventListenerSystem __instance)
     {
-        if (__instance._DamageTakenEventQuery == null) return;
-
+       
+        if (!Settings.EnablePvPKillTracker.Value || __instance._DeathEventQuery.IsEmpty) return;
+        
         var em = __instance.EntityManager;
-        if (!em.HasComponent<EntityOwner>(statChange.Source)) return;
-
-        var attacker = em.GetComponentData<EntityOwner>(statChange.Source).Owner;
-
-        if (!em.HasComponent<PlayerCharacter>(attacker)) return;
-
-        var attackingPlayerCharacter = em.GetComponentData<PlayerCharacter>(attacker);
-        var attackingUser = em.GetComponentData<User>(attackingPlayerCharacter.UserEntity._Entity);
-
-        var damageTakenEvents = __instance._DamageTakenEventQuery.ToComponentDataArray<DamageTakenEvent>(Allocator.Temp);
-
-        foreach (var damageTakenEvent in damageTakenEvents)
+        
+        NativeArray<DeathEvent> deathEvents =
+            __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
+        foreach (DeathEvent deathEvent in deathEvents)
         {
-            var target = damageTakenEvent.Entity;
-
-            if (!em.HasComponent<PlayerCharacter>(target))
-            {
-                continue; // the target is not a player
-            }
-
-            var targetPlayerCharacter = em.GetComponentData<PlayerCharacter>(target);
-            var targetUser = em.GetComponentData<User>(targetPlayerCharacter.UserEntity._Entity);
-            var targetHealth = em.GetComponentData<Health>(target);
-
+            if (!em.TryGetComponentData<PlayerCharacter>(deathEvent.Died, out var targetPlayerCharacter)) continue;
+            if (!em.TryGetComponentData<PlayerCharacter>(deathEvent.Killer, out var attackingPlayerCharacter)) continue;
+            if (!em.HasComponent<Equipment>(deathEvent.Died)) continue;
+            if (!em.HasComponent<Equipment>(deathEvent.Killer)) continue;
+            if (!em.HasComponent<Blood>(deathEvent.Died)) continue;
+            if (!em.HasComponent<Blood>(deathEvent.Killer)) continue;
+            em.TryGetComponentData<User>(attackingPlayerCharacter.UserEntity, out var attackingUser);
+            em.TryGetComponentData<User>(targetPlayerCharacter.UserEntity, out var targetUser);
+            var target = deathEvent.Died;
+            var killer = deathEvent.Killer;
+            
             if (!targetUser.IsConnected) continue; // don't be a cunt!
-            if (targetHealth.Value > 0) continue;   // target not dead
             if (attackingUser.CharacterName.ToString() == targetUser.CharacterName.ToString()) return; // don't record suicides
 
-            var attackingPlayer = Player.GetRepository.FindOne(x => x.PlatformId == attackingUser.PlatformId);
-            var targetPlayer = Player.GetRepository.FindOne(x => x.PlatformId == targetUser.PlatformId);
+            var attackingPlayer = Player.GetPlayerRepository.FindOne(x => x.PlatformId == attackingUser.PlatformId);
+            var targetPlayer = Player.GetPlayerRepository.FindOne(x => x.PlatformId == targetUser.PlatformId);
 
             attackingPlayer.Kills++;
             targetPlayer.Deaths++;
@@ -63,15 +57,17 @@ public static class KillDeath_Patches
 
             Plugin.Logger?.LogInfo($"{attackingPlayer.CharacterName} ({attackingPlayer.ELO}) killed {targetPlayer.CharacterName} ({targetPlayer.ELO})");
 
-            var embedMessage = BuildEmbedMessage(attacker, target);
-          
-            App.Instance!.Discord.SendMessageAsync($"**{attackingPlayer.CharacterName}** killed **{targetPlayer.CharacterName}**").GetAwaiter().GetResult();
-
-            if (!Player.GetRepository.Update(attackingPlayer))
+            var embedMessage = BuildEmbedMessage(killer, target);
+            
+            App.Instance!.Discord!.SendMessageAsync($"**{attackingPlayer.CharacterName}** killed **{targetPlayer.CharacterName}**").GetAwaiter().GetResult();
+            
+            App.Instance!.Discord!.SendMessageAsync("" , false , embedMessage.Build()).GetAwaiter().GetResult();
+            if (!Player.GetPlayerRepository.Update(attackingPlayer))
                 Plugin.Logger?.LogError($"Failed to update {attackingPlayer.CharacterName}");
 
-            if (!Player.GetRepository.Update(targetPlayer))
+            if (!Player.GetPlayerRepository.Update(targetPlayer))
                 Plugin.Logger?.LogError($"Failed to update {targetPlayer.CharacterName}");
+            
         }
     }
 
@@ -94,47 +90,57 @@ public static class KillDeath_Patches
         var builder = DiscordUtils.CreateEmbedBuilder("PvP Duel Results")
             .WithColor(new Color(0, 255, 0));
 
-        var winnerUnitLevel = Plugin.World!.EntityManager.GetComponentData<UnitLevel>(Winner);
-        var loserUnitLevel = Plugin.World!.EntityManager.GetComponentData<UnitLevel>(Loser);
-
-        var winnerUser = Plugin.World!.EntityManager.GetComponentData<User>(Winner);
-        var loserUser = Plugin.World!.EntityManager.GetComponentData<User>(Loser);
-
-        var winnerHealthComponent = Plugin.World!.EntityManager.GetComponentData<Health>(Winner);
+        var em = VWorld.Server.EntityManager;
+        
+        em.TryGetComponentData<Equipment>(Winner, out var winnerEquipment);
+        em.TryGetComponentData<Equipment>(Loser, out var loserEquipment);
+        
+        // Need to look into this method: *Equipment.GetFullLevel()
+        var winnerEquipmentLevel =  winnerEquipment.ArmorLevel+ winnerEquipment.WeaponLevel+ winnerEquipment.SpellLevel;
+        var loserEquipmentLevel = loserEquipment.ArmorLevel + loserEquipment.WeaponLevel + loserEquipment.SpellLevel;
+        
+        em.TryGetComponentData<User>(Winner, out var winnerUser);
+        em.TryGetComponentData<User>(Loser, out var loserUser);
+        
+        em.TryGetComponentData<Health>(Winner, out var winnerHealthComponent);
+        
         var winnerHealthPercentage = winnerHealthComponent.Value / winnerHealthComponent.MaxHealth;
-
         var winnerName = winnerUser.CharacterName;
         var loserName = loserUser.CharacterName;
 
-        List<string> messages = new List<string>();
+        var messages = new List<string>();
 
-        if (winnerHealthPercentage < 10f)
-        { // Winner has less than 10% health left.
-            messages.Add($"An extremely close victory was achived by **{winnerName}** over **{loserName}**!");
+        switch (winnerHealthPercentage)
+        {
+            case < 10f: // Winner has less than 10% health left.
+                messages.Add($"An extremely close victory was achieved by **{winnerName}** over **{loserName}**!");
+                break;
+            case > 75f: // Winner has more than 75% health left.
+                messages.Add($"With an overwhelming victory, **{winnerName}** has defeated **{loserName}**!");
+                messages.Add($"**{winnerName}** slaughtered **{loserName}**!");
+                break;
+            default:
+            {
+                if (winnerEquipmentLevel <= loserEquipmentLevel - 10f)
+                { // Winner gearscore is at least 10 lower than Loser.
+                    messages.Add($"**Against all odds, **{winnerName}** has defeated **{loserName}**!");
 
-        }
-        else if (winnerHealthPercentage > 75f)
-        { // Winner has more than 75% health left.
-            messages.Add($"With an overwhelming victory, **{winnerName}** has defeated **{loserName}**!");
-            messages.Add($"**{winnerName}** slaughtered **{loserName}**!");
+                }
+                else if (winnerEquipmentLevel >= loserEquipmentLevel + 10f)
+                { // Winner gearscore is at least 10 levels higher than Loser.
+                    messages.Add($"**{loserName}** never stood a chance against **{winnerName}**!");
 
-        }
-        else if (winnerUnitLevel.Level <= loserUnitLevel.Level - 10)
-        { // Winner gearscore is at least 10 lower than Loser.
-            messages.Add($"**Against all odds, **{winnerName}** has defeated **{loserName}**!");
+                }
+                else
+                { // Generic victory messages.
+                    messages.Add($"**{winnerName}** is victorious over **{loserName}**!");
+                    messages.Add($"**{winnerName}** defeated **{loserName}**, **{loserName}** needs to pick up the slack!");
+                    messages.Add($"**{loserName}** is counting sheep at the blade of **{winnerName}**!");
 
-        }
-        else if (winnerUnitLevel.Level >= loserUnitLevel.Level + 10)
-        { // Winner gearscore is at least 10 levels higher than Loser.
-            messages.Add($"**{loserName}** never stood a chance against **{winnerName}**!");
+                }
 
-        }
-        else
-        { // Generic victory messages.
-            messages.Add($"**{winnerName}** is victorious over **{loserName}**!");
-            messages.Add($"**{winnerName}** defeated **{loserName}**, **{loserName}** needs to pick up the slack!");
-            messages.Add($"**{loserName}** is counting sheep at the blade of **{winnerName}**!");
-
+                break;
+            }
         }
 
         // Random messages from messages
@@ -142,8 +148,8 @@ public static class KillDeath_Patches
         builder.WithDescription(randomMessage);
 
         // needs character name and gearscore and maybe remaining health
-        builder.AddField("Winner", $"{winnerName} ({winnerUnitLevel.Level})", true);
-        builder.AddField("Loser", $"{loserName} ({loserUnitLevel.Level})", true);
+        builder.AddField("Winner", $"{winnerName} ({winnerEquipmentLevel:F1})", true);
+        builder.AddField("Loser", $"{loserName} ({loserEquipmentLevel:F1})", true);
 
         return builder;
     }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Newtonsoft.Json;
 using Scriban;
 
@@ -374,8 +375,8 @@ internal class WebServer
 
     public void Start()
     {
-        behaviour = Plugin.Instance!.AddComponent<WebBehaviour>();
-        behaviour.OnRequestReceived += OnRequestReceived;
+        behaviour = Plugin.Instance?.AddComponent<WebBehaviour>();
+        behaviour!.OnRequestReceived += OnRequestReceived;
         // find all Controllers
         var controllers = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => t.IsDefined(typeof(ControllerAttribute), false));
@@ -406,6 +407,7 @@ internal class WebServer
     public void Stop()
     {
         _listener.Stop();
+        behaviour = null;
     }
 
     private void accept()
@@ -435,6 +437,6 @@ internal class WebServer
     private void ListenerCallback(IAsyncResult result)
     {
         HttpListenerContext context = _listener.EndGetContext(result);
-        this.behaviour!.QueueRequest(context);
+        behaviour!.QueueRequest(context);
     }
 }

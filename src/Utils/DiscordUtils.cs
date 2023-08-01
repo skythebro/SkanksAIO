@@ -9,17 +9,17 @@ internal static class DiscordUtils
     {
         var builder = new EmbedBuilder();
 
-        builder.WithTitle($"**{Plugin.Instance!.MessageTitle.Value} - {title}**");
+        builder.WithTitle($"**{Settings.MessageTitle.Value} - {title}**");
 
-        if (!string.IsNullOrEmpty(Plugin.Instance!.MessageFooter.Value) || !string.IsNullOrEmpty(Plugin.Instance!.MessageFooterIcon.Value))
+        if (!string.IsNullOrEmpty(Settings.MessageFooter.Value) || !string.IsNullOrEmpty(Settings.MessageFooterIcon.Value))
         {
             builder.WithFooter((footer) =>
             {
-                if (!string.IsNullOrEmpty(Plugin.Instance!.MessageFooter.Value))
-                    footer.WithText(Plugin.Instance!.MessageFooter.Value);
+                if (!string.IsNullOrEmpty(Settings.MessageFooter.Value))
+                    footer.WithText(Settings.MessageFooter.Value);
 
-                if (!string.IsNullOrEmpty(Plugin.Instance!.MessageFooterIcon.Value))
-                    footer.WithIconUrl(Plugin.Instance!.MessageFooterIcon.Value);
+                if (!string.IsNullOrEmpty(Settings.MessageFooterIcon.Value))
+                    footer.WithIconUrl(Settings.MessageFooterIcon.Value);
             });
         }
 

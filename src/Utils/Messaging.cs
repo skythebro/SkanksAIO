@@ -1,6 +1,8 @@
 using System;
+using Bloodstone.API;
+using Il2CppInterop.Runtime;
+using ProjectM;
 using ProjectM.Network;
-using UnhollowerRuntimeLib;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -8,11 +10,11 @@ namespace SkanksAIO.Utils;
 
 public static class Messaging
 {
-
-    public static void SendMessage(User user, ServerChatMessageType msg_type, string message)
+    private static EntityManager em = VWorld.Server.EntityManager;
+    
+    public static void SendMessage(User user, ServerChatMessageType msgType, string message)
     {
-        var em = Plugin.World.EntityManager;
-
+        /*
         var entity = em.CreateEntity(
             ComponentType.ReadOnly<NetworkEventType>(),      //event type
             ComponentType.ReadOnly<SendEventToUser>(),       //send it to user
@@ -21,76 +23,75 @@ public static class Messaging
 
         NetworkId nid = em.GetComponentData<NetworkId>(user.LocalCharacter._Entity);
 
-        var ev1 = new ChatMessageServerEvent();
-        ev1.MessageText = message;
-        ev1.MessageType = msg_type;
-        ev1.FromUser = nid;
-        ev1.TimeUTC = DateTime.Now.ToFileTimeUtc();
-
-        em.SetComponentData<SendEventToUser>(entity, new()
+        var ev1 = new ChatMessageServerEvent
         {
-            UserIndex = user.Index
+            MessageText = message,
+            MessageType = msgType,
+            FromUser = nid,
+            TimeUTC = DateTime.Now.ToFileTimeUtc()
+        };
+
+        entity.WithComponentData((ref SendEventToUser eventToUser) =>
+        {
+            eventToUser.UserIndex = user.Index;
         });
-
-        em.SetComponentData<NetworkEventType>(entity, new()
+        
+        entity.WithComponentData((ref NetworkEventType net) =>
         {
-            EventId = NetworkEvents.EventId_ChatMessageServerEvent,
-            IsAdminEvent = false,
-            IsDebugEvent = false
+            net.EventId = NetworkEvents.EventId_ChatMessageServerEvent;
+            net.IsAdminEvent = false;
+            net.IsDebugEvent = false;
         });
 
         //fire off the event
         em.SetComponentData(entity, ev1);
+        */
     }
 
-    public static void SendMessage(Entity userEntity, ServerChatMessageType msg_type, string message)
+    public static void SendMessage(Entity userEntity, ServerChatMessageType msgType, string message)
     {
-        var em = Plugin.World.EntityManager;
-
         var entity = em.CreateEntity(
             ComponentType.ReadOnly<NetworkEventType>(),      //event type
             ComponentType.ReadOnly<SendEventToUser>(),       //send it to user
             ComponentType.ReadOnly<ChatMessageServerEvent>() // what event
         );
 
-        var user = em.GetComponentData<User>(userEntity);
-        var nid = em.GetComponentData<NetworkId>(userEntity);
+        em.TryGetComponentData<User>(userEntity, out var user);
+        em.TryGetComponentData<NetworkId>(userEntity, out var nid);
 
-        var ev1 = new ChatMessageServerEvent();
-        ev1.MessageText = message;
-        ev1.MessageType = msg_type;
-        ev1.FromUser = nid;
-        ev1.TimeUTC = DateTime.Now.ToFileTimeUtc();
-
-        em.SetComponentData<SendEventToUser>(entity, new()
+        var ev1 = new ChatMessageServerEvent
         {
-            UserIndex = user.Index
+            MessageText = message,
+            MessageType = msgType,
+            FromUser = nid,
+            TimeUTC = DateTime.Now.ToFileTimeUtc()
+        };
+
+        entity.WithComponentData((ref SendEventToUser eventToUser) =>
+        {
+            eventToUser.UserIndex = user.Index;
         });
 
-        em.SetComponentData<NetworkEventType>(entity, new()
+        entity.WithComponentData((ref NetworkEventType net) =>
         {
-            EventId = NetworkEvents.EventId_ChatMessageServerEvent,
-            IsAdminEvent = false,
-            IsDebugEvent = false
+            net.EventId = NetworkEvents.EventId_ChatMessageServerEvent;
+            net.IsAdminEvent = false;
+            net.IsDebugEvent = false;
         });
-
+        
         //fire off the event
         em.SetComponentData(entity, ev1);
     }
 
-    public static void SendGlobalMessage(ServerChatMessageType msg_type, string message)
+    public static void SendGlobalMessage(ServerChatMessageType msgType, string message)
     {
-        var em = Plugin.World.EntityManager;
+        var userQuery = em.CreateEntityQuery(ComponentType.ReadOnly(Il2CppType.Of<User>())).ToEntityArray(Allocator.Temp);
 
-        var userQuery = em.CreateEntityQuery(ComponentType.ReadOnly(Il2CppType.Of<User>()));
-
-        foreach (var entity in userQuery.ToEntityArray(Allocator.Temp))
+        foreach (var entity in userQuery)
         {
-            var u = Plugin.World.EntityManager.GetComponentData<User>(entity);
-
-            if (!u.IsConnected) continue;
-
-            Messaging.SendMessage(u, msg_type, message);
+            em.TryGetComponentData<User>(entity, out var user);
+            if (!user.IsConnected) continue;
+            SendMessage(user, msgType, message);
         }
     }
 

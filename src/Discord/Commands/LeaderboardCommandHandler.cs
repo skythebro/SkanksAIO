@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bloodstone.API;
 
 namespace SkanksAIO.Discord.Commands;
 
@@ -18,9 +19,9 @@ internal class LeaderboardCommandHandler
     [DiscordCommand("leaderboard", "Check the leaderboard")]
     internal async Task Leaderboard(SocketSlashCommand ctx, string PlayerName = "")
     {
-        var bootstrapSystem = Plugin.World.GetExistingSystem<ServerBootstrapSystem>();
+        var bootstrapSystem = VWorld.Server.GetExistingSystem<ServerBootstrapSystem>();
 
-        var players = Player.GetRepository.FindAll()
+        var players = Player.GetPlayerRepository.FindAll()
             .OrderByDescending(x => x.Kills)
             .ToList();
 
@@ -33,7 +34,7 @@ internal class LeaderboardCommandHandler
         var startIndex = 0;
         var endIndex = 8;
         var selectedPlayerRank = 0;
-        string bold = "";
+        var bold = "";
 
         if (selectedPlayer != null)
         {
@@ -47,7 +48,7 @@ internal class LeaderboardCommandHandler
         }
 
         bold = "";
-        if (!Plugin.Instance!.LeaderboardAsList.Value)
+        if (!Settings.LeaderboardAsList.Value)
         {
             for (var i = startIndex; i <= endIndex; i++)
             {
@@ -58,7 +59,7 @@ internal class LeaderboardCommandHandler
 
                 builder.AddField(
                     $"**{(i + 1)}**{(i + 1).Ordinal()} {bold}{player.CharacterName}{bold}",
-                    $"{bold}Kills: {player.Kills}\nKD: {player.KD.ToString("0.00")}\nELO: {bold}{player.ELO}",
+                    $"{bold}Kills: {player.Kills}\nKD: {player.KD:0.00}\nELO: {bold}{player.ELO}",
                     true
                 );
             }

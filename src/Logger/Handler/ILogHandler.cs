@@ -4,7 +4,7 @@ using BepInEx.Logging;
 
 namespace SkanksAIO.Logger.Handler;
 
-interface ILogHandler
+internal interface ILogHandler
 {
     bool Accept(LogLevel level);
 

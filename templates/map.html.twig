@@ -1,0 +1,249 @@
+<html lang="en">
+<head>
+    <title>Interactive Map</title>
+    <!-- Include Leaflet CSS -->
+    <link rel="icon"
+          href="https://cdn2.steamgriddb.com/file/sgdb-cdn/icon/9e1c574347088c9225f323757f547b06/32/96x96.png"
+          type="image/x-icon">
+    <style> /* Body styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lucida Grande', Geneva, Arial, Verdana, sans-serif;
+            background-color: #282c34; /* Dark background color */
+            color: #fff; /* Text color */
+        }
+
+        /* Header styles */
+        #header {
+            background-color: #222; /* Darker header background color */
+            color: #ff4d4d; /* Slight red header text color */
+            padding: 10px;
+        }
+
+        #header h1 {
+            margin: 0;
+        }
+
+        #subheader {
+            text-align: left;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Map container styles */
+        #map-container {
+            width: 100%;
+            height: calc(100vh - 135px); /* Adjust 100px to account for other elements on the page */
+            border: 1px solid #888;
+            background-color: #333; /* Darker map container background color */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
+</head>
+<body style="">
+<div id="header">
+    <h1>V rising</h1>
+    <hr>
+    <div id="subheader">
+        <h2>Interactive map</h2>
+    </div>
+</div>
+<div id="map-container" style="width: 99.9%;"></div>
+<script>
+    function getPlayerPositions() {
+        return fetch('/map-data-player')
+            .then(response => response.json()) // Parse the JSON data from the response
+            .then(data => {
+                // Convert the JSON data to a JavaScript array (List equivalent)
+                return JSON.parse(data);
+            })
+            .catch(error => {
+                console.error('Error fetching map data:', error);
+                return []; // Return an empty array in case of an error
+            });
+    }
+
+
+    // Create the map
+    //const scale_factor_y = (-1834.8673) / (-3815 - 3530) // 0,2498117494894486044928522804629
+    //const scale_factor_x = (-1700.9005 - (-1760)) / (4070 - 3845) // 0,30307435897435897435897435897436
+    const xOffsetIngame = -2720;
+    const yOffsetIngame = -876;
+    const xOffsetOutgame = 10870;
+    const yOffsetOutgame = 3530;
+    const scale_factor_x =  xOffsetIngame / xOffsetOutgame;
+    const scale_factor_y =  yOffsetIngame / yOffsetOutgame;
+    //const scale_factor_x = (xOffsetIngame + xOffsetOutgame) / (-1700.9005 - (-1760));
+    //const scale_factor_y = (yOffsetIngame + yOffsetOutgame) / (-1834.8673);
+
+
+
+    const mapMinZoom = 0;
+    const mapMaxZoom = 6;
+    let playerVectorLayer = new ol.layer.Vector;
+
+    function updatePlayerPositions() {
+        getPlayerPositions().then(playerPositions => {
+
+            let playerFeatures = [];
+
+            playerPositions.forEach(function (position) {
+                let playerName = position.Name;
+                let playerX = position.X * scale_factor_x;
+                let playerY = position.Y * scale_factor_y;
+
+                // 10870+ -1760 * 0,2498117494894486044928522804629
+                // 3530+ -1834.8673*  0,30307435897435897435897435897436
+
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(([playerX, playerY])),
+                    name: playerName,
+                });
+
+                playerFeatures.push(feature);
+                console.log("scalefactorx:" + scale_factor_x + " scalefactory: " + scale_factor_y)
+                console.log("name:" + playerName + " PosX: " + playerX + " PosY: " + playerY)
+
+
+            });
+
+            const playerVectorSource = new ol.source.Vector({
+                features: playerFeatures
+            });
+
+            const playerImageStyle = new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
+                    scale: 1,
+                }),
+                text: new ol.style.Text({
+                    fill: new ol.style.Fill({color: 'green'}),
+                    font: '22px Calibri,sans-serif',
+                    offsetY: -15,
+                }),
+            });
+
+            playerVectorLayer = new ol.layer.Vector({
+                source: playerVectorSource,
+                style: function (feature) {
+                    playerImageStyle.getText().setText(feature.get('name'));
+                    return [playerImageStyle];
+                }
+            });
+        });
+    }
+
+    function init() {
+        const viewExtent = [-5440 * 2, -5440 * 2, 5440 * 4, 5440 * 2];
+        const normalExtent = [1, -5440, 5440 * 2, 5440];
+
+        const tileGrid = new ol.tilegrid.TileGrid({
+            extent: normalExtent,
+            tileSize: 256,
+            resolutions: [...Array(mapMaxZoom + 1)].map((_, z) => Math.pow(2, mapMaxZoom - z)),
+            origin: [1, -5440], // Set the origin to the bottom-left corner
+        });
+
+        const myView = new ol.View({
+            projection: ol.proj.get('EPSG:3857'),
+            center: ([0, 0]), // Set your initial center here (lon, lat)
+            zoom: 0,
+            extent: viewExtent,
+        });
+
+        const map = new ol.Map({
+            target: 'map-container',
+            view: myView,
+        });
+
+        const layer = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                maxZoom: mapMaxZoom,
+                minZoom: mapMinZoom,
+                tileGrid: tileGrid,
+                tileUrlFunction: function (tileCoord) {
+                    const z = tileCoord[0];
+                    const x = tileCoord[1];
+                    const y = -tileCoord[2] - 1; // Invert y-coordinate
+                    return 'https://skythebro.github.io/SkanksAIO/templates/VrisingMapTiles/' + z + '/' + x + '/' + y + '.png';
+                },
+            })
+        });
+
+        const regionData = [
+
+            {lon: 2 * 1527.00000, lat: 4.3 * Math.abs(-862.50000), label: 'Gloomrot North'},//x:y:3709
+            {lon: 2 * 2432.50000, lat: 4.1 * Math.abs(-890.00000), label: 'Gloomrot South'},//x:y:3649
+            {lon: 2 * 3943.00000, lat: 5.2 * Math.abs(-756.00000), label: 'Cursed Forest'}, //x:y:3931.2
+            {lon: 2 * 950.50000, lat: Math.abs(-2431.50000) / 4.15, label: 'Silverlight Hills'},//x:y:586
+            {lon: 2 * 2722.00000, lat: Math.abs(-2309.50000) / 2.8, label: 'Dunley Farmlands'}, //x:y:825
+            {lon: 2 * 4525.50000, lat: Math.abs(-2455.00000) / 5, label: 'Hallowed Mountains'}, //x:y:491
+            {lon: 2 * 2543.50000, lat: -4046.00000 / 1.52, label: 'Farbane Woods'},//x:y:-2662
+            {lon: 4284.0570888888915 , lat:  1319.5056608032676, label: 'Playertest'},//x:y:-2662
+        ];
+
+        //Create features and add them to the vector layer
+        let features = [];
+
+        regionData.forEach(function (data) {
+            const feature = new ol.Feature({
+                geometry: new ol.geom.Point(([parseFloat(data.lon), parseFloat(data.lat)])),
+                name: data.label,
+            });
+            features.push(feature);
+        });
+
+        const vectorSource = new ol.source.Vector({
+            features: features
+        });
+
+
+
+
+        const imageStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
+                scale: 1,
+            }),
+            text: new ol.style.Text({
+                fill: new ol.style.Fill({color: 'white'}),
+                font: '22px Calibri,sans-serif',
+                offsetY: -15,
+            }),
+        });
+
+        const vectorLayer = new ol.layer.Vector({
+            source: vectorSource,
+            style: function (feature) {
+                imageStyle.getText().setText(feature.get('name'));
+                return [imageStyle];
+            }
+        });
+
+        // Fetch data initially and get the vector layer
+        updatePlayerPositions()
+
+        setInterval(() => {
+            updatePlayerPositions();
+            playerVectorLayer.changed();
+
+        }, 10000); // Fetch data every 10 seconds (adjust the interval as needed)
+
+        map.addLayer(layer)
+        map.addLayer(vectorLayer);
+        map.addLayer(playerVectorLayer);
+
+        window.addEventListener("resize", function () {
+            map.updateSize();
+        });
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+</body>
+</html>

@@ -13,7 +13,6 @@ internal class Logger
     {
         Handlers.Add(handler);
     }
-
     public async Task LogFatal(string message)
     {
         await Log(LogLevel.Fatal, message);

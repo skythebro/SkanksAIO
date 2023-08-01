@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Bloodstone.API;
 using Discord.WebSocket;
 using ProjectM;
 using ProjectM.Network;
@@ -12,22 +13,24 @@ namespace SkanksAIO.Discord.Commands;
 [Admin]
 class AdminCommandHandler
 {
+    
     [DiscordCommand("kick", "Kick an in-game player")]
-    internal async Task KickCommand(SocketSlashCommand ctx, string PlayerName)
+    internal async Task KickCommand(SocketSlashCommand ctx, string playerName)
     {
-        if (!UserUtils.TryGetUserByCharacterName(PlayerName, out var user)) {
-            Plugin.Logger?.LogInfo($"{PlayerName} was not found.");
-            await ctx.RespondAsync($"{PlayerName} was not found.");
+        if (!UserUtils.TryGetUserByCharacterName(playerName, out var user))
+        {
+            Plugin.Logger?.LogInfo($"{playerName} was not found.");
+            await ctx.RespondAsync($"{playerName} was not found.");
             return;
         }
 
-        if (!user!.IsConnected)
+        if (!user.IsConnected)
         {
             await ctx.RespondAsync($"{user.CharacterName} is not online.");
             return;
         }
 
-        var bootstrapSystem = Plugin.World.GetExistingSystem<ServerBootstrapSystem>();
+        var bootstrapSystem = VWorld.Server.GetExistingSystem<ServerBootstrapSystem>();
 
         bootstrapSystem.Kick(user.PlatformId, ConnectionStatusChangeReason.Kicked, false);
 
@@ -36,53 +39,52 @@ class AdminCommandHandler
     }
 
     [DiscordCommand("ban", "Bans an in-game player")]
-    internal async Task BanCommand(SocketSlashCommand ctx, string PlayerName)
+    internal async Task BanCommand(SocketSlashCommand ctx, string playerName)
     {
-        if(!UserUtils.TryGetUserByCharacterName(PlayerName, out var user))
+        if (!UserUtils.TryGetUserByCharacterName(playerName, out var user))
         {
-            Plugin.Logger?.LogInfo($"{PlayerName} was not found.");
-            await ctx.RespondAsync($"{PlayerName} was not found.");
+            Plugin.Logger?.LogInfo($"{playerName} was not found.");
+            await ctx.RespondAsync($"{playerName} was not found.");
             return;
         }
 
-        var em = Plugin.World.EntityManager;
+        var em = VWorld.Server.EntityManager;
 
         var entityEvent = em.CreateEntity(
-             Unity.Entities.ComponentType.ReadOnly<NetworkEventType>(),
-             Unity.Entities.ComponentType.ReadOnly<BanEvent>()
+            Unity.Entities.ComponentType.ReadOnly<NetworkEventType>(),
+            Unity.Entities.ComponentType.ReadOnly<BanEvent>()
         );
 
-        em.SetComponentData(entityEvent, new BanEvent()
+        entityEvent.WithComponentData((ref BanEvent banEvent) =>
         {
-            PlatformId = user!.PlatformId,
-            Unban = false
+            banEvent.PlatformId = user!.PlatformId;
+            banEvent.Unban = false;
         });
-
         Plugin.Logger?.LogInfo($"{user.CharacterName} has been banned by {ctx.User.Username}.");
         await ctx.RespondAsync($"{user.CharacterName} has been banned.");
     }
 
     [DiscordCommand("unban", "Unbans an in-game player")]
-    internal async Task UnbanCommand(SocketSlashCommand ctx, string PlayerName)
+    internal async Task UnbanCommand(SocketSlashCommand ctx, string playerName)
     {
-        if (!UserUtils.TryGetUserByCharacterName(PlayerName, out var user))
+        if (!UserUtils.TryGetUserByCharacterName(playerName, out var user))
         {
-            Plugin.Logger?.LogInfo($"{PlayerName} was not found.");
-            await ctx.RespondAsync($"{PlayerName} was not found.");
+            Plugin.Logger?.LogInfo($"{playerName} was not found.");
+            await ctx.RespondAsync($"{playerName} was not found.");
             return;
         }
 
-        var em = Plugin.World.EntityManager;
+        var em = VWorld.Server.EntityManager;
 
         var entityEvent = em.CreateEntity(
-                        Unity.Entities.ComponentType.ReadOnly<NetworkEventType>(),
-                        Unity.Entities.ComponentType.ReadOnly<BanEvent>()
-                    );
+            Unity.Entities.ComponentType.ReadOnly<NetworkEventType>(),
+            Unity.Entities.ComponentType.ReadOnly<BanEvent>()
+        );
 
-        em.SetComponentData(entityEvent, new BanEvent()
+        entityEvent.WithComponentData((ref BanEvent banEvent) =>
         {
-            PlatformId = user!.PlatformId,
-            Unban = true
+            banEvent.PlatformId = user.PlatformId;
+            banEvent.Unban = true;
         });
 
         Plugin.Logger?.LogInfo($"{user.CharacterName} has been unbanned by {ctx.User.Username}.");
