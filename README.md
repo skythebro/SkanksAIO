@@ -1,7 +1,9 @@
 # ☁ SkanksAIO - Gloomrot Update
 Forked from [phillipsOG](https://github.com/phillipsOG/SkanksAIO) and updated to gloomrot.
 
-A V-Rising mod that conects your server to discord and a webserver.
+A V-Rising mod that connects your server to discord and a webserver plus some extra stuff.
+Please report any issues [here](https://github.com/skythebro/SkanksAIO/issues).
+
 
 ## Installation
 * Extract and put the **_SkanksAIO_** folder into your `(Vrising Server)\BepInEx\plugins folder.`
