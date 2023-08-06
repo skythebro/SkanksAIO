@@ -363,9 +363,6 @@ InteractiveMapUpdateInterval = 10
 
 ---
 
-# Support me!
-I have a Patreon now! So please support me [Here](https://www.patreon.com/user?u=97347013) if you want to.
-
 # Developer & credits
 <details>
 
