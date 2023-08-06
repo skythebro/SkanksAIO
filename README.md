@@ -25,7 +25,7 @@ If you get access denied error 5 for the webserver make sure you run the server 
 
 
 ### webserver interactive map
-Make sure <ins>_**EnableInteractiveMap**_</ins> is set to `true` in your server's `SkanksAIO.cfg` file.
+Make sure <ins>_**EnableInteractiveMap**_</ins> is set to `true` in your server's `SkanksAIO.cfg` file. You can access the map by going to `http://yourip:port/map` in your browser.
 ![img.png](https://imgur.com/VLF10mW.png)
 
 #### features
