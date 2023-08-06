@@ -37,6 +37,12 @@ abstract class AbstractChatCommandsHandler
     {
         Messaging.SendMessage(User, type, message);
     }
+    
+    internal User GetUser()
+    {
+        return User;
+        
+    }
     /// <summary>
     /// Send a system message to every client that is currently connected to the server.
     /// </summary>

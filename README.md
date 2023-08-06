@@ -11,7 +11,7 @@ A V-Rising mod that conects your server to discord and a webserver.
 * The database will generate in `plugins\SkanksAIO\config`
 * If you for some reason want to edit the database you'll need [LiteDB.Studio](https://github.com/mbdavid/LiteDB.Studio/releases) and database management knowledge.
 
-## Discord commands and Other Features
+## Commands and Other Features
 **Notes**:
 - 🔒 Requires admin permissions
 - <ins>_Underlined_</ins> keys come from the config file.
@@ -19,12 +19,38 @@ A V-Rising mod that conects your server to discord and a webserver.
 ---
 
 ### webserver example (template included)
+Make sure <ins>_**Enable**_</ins> is set to `true` in your server's `SkanksAIO.cfg` file. And that the <ins>_**port**_</ins> is port forwarded and allowed through your firewall.
+If you get access denied error 5 for the webserver make sure you run the server as admin.
 ![img.png](https://i.imgur.com/6dY9qUG.png)
+
+
+### webserver interactive map
+Make sure <ins>_**EnableInteractiveMap**_</ins> is set to `true` in your server's `SkanksAIO.cfg` file.
+![img.png](https://imgur.com/VLF10mW.png)
+
+#### features
+- [x] Player tracking
+- [x] Custom marker placement using admin commands
+- [x] Player stats per region WIP (total amount of players atm)
+
+Player tracking example:
+![img.png](https://i.imgur.com/Lms3r1D.png)
+
+Custom markers example: 
+(these are all manually placed, so use them for special locations, other marker options will be added later)
+
+![img.png](https://i.imgur.com/96gZYZk.png)
+
+Player stats example:
+
+![img.png](https://imgur.com/EEWy74t.png)
+
+Check out the map.html.twig file for icon color and size customization (WIP everything is in one file atm, will be split up later)
 
 ---
 
 ### Global chat discord link
-Example:
+Bot image in example is from [Decaprime's](https://github.com/decaprime) LeadAHorseToWater mod. (this image is just used for an example and is not included in this mod)
 
 ![img.png](https://i.imgur.com/vPHFD7E.png)
 
@@ -72,6 +98,29 @@ This command kicks the specified player.
 
 
 ---
+## Ingame commands
+Im using the default command prefix here but you can change it in the config.
+
+#### `!playercount`
+This command lists the amount of players on the server.
+
+#### 🔒 `!reloadskanks`
+This command reloads the server config and json files.
+
+#### 🔒 `!listcommands`
+This command lists all the available commands.
+
+#### 🔒 `!addmarker [markername] [type]`
+This command adds a custom marker to the map from where you're standing. For a list of types, use the command <ins>_**listmarkertypes**_</ins>
+
+#### 🔒 `!removemarker [markername]`
+This command removes marker with the given name.
+
+#### 🔒 `!listmarkertypes`
+This command lists all the usable marker types.
+
+#### 🔒 `!listplacedmarkers`
+This command lists all of the placed markers names, types and locations.
 
 # Configurations
 - <ins>**_ShowUserConnectedInDC_**</ins> This is a boolean if set to true the bot will announce when a user connects to the server.
@@ -100,6 +149,24 @@ This file contains a list of announcement messages. These messages will randomly
  
 ```json
 ["Announcement 1","Announcement 2","Announcement 3"]
+```
+
+### Markers.json
+This file contains a all the marker info for the interactive map. "testMarker" is the name that will show up on the map. Type is an enum. X and Y are the ingame coordinates for the location of the marker.
+I recommend using the ingame command to add markers to this file.
+```json
+{
+  "testMarker": {
+    "Type": 15,
+    "X": 0,
+    "Y": 0
+  },
+  "testMarker2": {
+    "Type": 21,
+    "X": -100,
+    "Y": -100
+  }
+}
 ```
 
 ### Messages.json
@@ -171,7 +238,7 @@ This file can be filled with steamid64's of VIP users. (Previously known as Skan
 ---
 
 ### DISCLAIMER
-- I cannot guarantee it will work on linux hosted servers!
+- I cannot guarantee it will work on docker hosted servers!
 
 ```ini
 [Announcements]
@@ -259,7 +326,7 @@ EnablePvPKillTracker = true
 
 [VIP]
 
-## Enables the VIP functionality. The json file will generate in the bepInEx config folder SkanksAIO/Vips.json folder after restart. This json file will be read at startup or when reloading. To add a user to VIP you need to add their steamid64 to the file.
+## Enables the VIP functionality. the txt file will generate in the bepInEx config folder SkanksAIO/SkanksAIO.VIPlist.txt folder after restart. This txt file will be read at startup or when reloading. To add a user to VIP you need to add their steamid64 to the file. (1 per line)
 # Setting type: Boolean
 # Default value: false
 EnableVIP = false
@@ -281,10 +348,15 @@ Port = 8080
 # Default value: false
 EnableInteractiveMap = false
 
-## Interval in seconds for the interactive map to update
+## Enables tracking of players on the interactive map
+# Setting type: Boolean
+# Default value: false
+TrackPlayersOnMap = false
+
+## Interval in seconds for the interactive map to update. Don't set this too low or you might get rate limited.
 # Setting type: Int32
-# Default value: 30
-InteractiveMapUpdateInterval = 30
+# Default value: 10
+InteractiveMapUpdateInterval = 10
 ```
 
 ---

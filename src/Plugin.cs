@@ -14,6 +14,7 @@ using Il2CppInterop.Runtime.Injection;
 using LiteDB;
 using SkanksAIO.Discord;
 using SkanksAIO.Logger.Handler;
+using SkanksAIO.Utils.Config;
 using SkanksAIO.Web;
 
 namespace SkanksAIO;
@@ -86,8 +87,6 @@ public class Plugin : BasePlugin, IRunOnInitialized
         Logger.RegisterLogHandler(new DiscordLogHandler());
 
         Settings.Reload(Config);
-        JsonConfigHelper.CreateJsonConfigs();
-        JsonConfigHelper.LoadAllConfigs();
         
         ClassInjector.RegisterTypeInIl2Cpp<App>();
         ClassInjector.RegisterTypeInIl2Cpp<WebBehaviour>();
@@ -100,20 +99,18 @@ public class Plugin : BasePlugin, IRunOnInitialized
         
         try
         {
-            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            var pluginDirectory = Path.GetDirectoryName(assemblyLocation);
+            //var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            
+            var pluginDirectory = Path.GetFullPath(Paths.PluginPath);
+            var configDirectory = Path.Combine(pluginDirectory, "SkanksAIO", "config");
 
-            if (!Directory.Exists(Path.Combine(pluginDirectory, "SkanksAIO")))
+            var dbPathFull = Path.Combine(configDirectory, "SkanksAIO.db");
+            Log.LogDebug($"dbPathFull {dbPathFull}");
+            if (!Directory.Exists(configDirectory))
             {
-                Directory.CreateDirectory(Path.Combine(pluginDirectory, "/SkanksAIO"));
+                Directory.CreateDirectory(configDirectory);
             }
-
-            if (!Directory.Exists(Path.Combine(pluginDirectory, "/SkanksAIO", "/config")))
-            {
-                Directory.CreateDirectory(Path.Combine(pluginDirectory, "/SkanksAIO", "/config"));
-            }
-
-            var dbPathFull = Path.Combine(pluginDirectory, "/SkanksAIO", "/config", "/SkanksAIO.db");
+            
             Database = new LiteDatabase(dbPathFull);
         }
         catch (Exception e)

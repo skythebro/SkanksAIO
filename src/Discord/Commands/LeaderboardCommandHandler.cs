@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bloodstone.API;
+using SkanksAIO.Utils.Config;
 
 namespace SkanksAIO.Discord.Commands;
 

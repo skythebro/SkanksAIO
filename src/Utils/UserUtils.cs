@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Bloodstone.API;
 using Il2CppInterop.Runtime;
+using ProjectM;
 using ProjectM.Network;
+using ProjectM.Terrain;
 using SkanksAIO.Models;
 using Unity.Collections;
 using Unity.Entities;
@@ -12,7 +15,7 @@ using UnityEngine;
 
 namespace SkanksAIO.Utils;
 
-class UserUtils
+public class UserUtils
 {
     private static EntityManager _em = VWorld.Server.EntityManager;
 
@@ -56,8 +59,11 @@ class UserUtils
         var userQuery = _em.CreateEntityQuery(ComponentType.ReadOnly(Il2CppType.Of<User>()));
         foreach (var entity in userQuery.ToEntityArray(Allocator.Temp))
         {
-            var user = VWorld.Server.EntityManager.GetComponentData<User>(entity);
-
+            if (!VWorld.Server.EntityManager.TryGetComponentData<User>(entity, out var user))
+            {
+                continue;
+            }
+            
             if (user.IsConnected)
             {
                 users.Add(user);
@@ -102,15 +108,15 @@ class UserUtils
     private static Dictionary<ulong, Vector3> playerPositions = new();
 
 // Method to update player position
-    public static void UpdatePlayerPosition(Player player, Vector3 position)
+    public static void UpdatePlayerPosition(ulong platformId, Vector3 position)
     {
-        playerPositions[player.PlatformId] = position;
+        playerPositions[platformId] = position;
     }
 
-// Method to get player position
-    public static Vector3 GetPlayerPosition(Player player)
+    // Method to get player position
+    public static Vector3 GetPlayerPosition(ulong platformId)
     {
-        return playerPositions.TryGetValue(player.PlatformId, out var position) ? position : default; // Default position if not found
+        return playerPositions.TryGetValue(platformId, out var position) ? position : default; // Default position if not found
     }
 
     public static List<PlayerLocation> GetAllPlayerPositions()
@@ -132,30 +138,86 @@ class UserUtils
             {
                 continue; // just in case
             }
-
+            
             var player = UserToPlayerEntity(user);
             VWorld.Server.EntityManager.TryGetComponentData<Translation>(player, out var userpos);
-            UpdatePlayerPosition(databasePlayer, userpos.Value);
+            UpdatePlayerPosition(databasePlayer.PlatformId, userpos.Value);
         }
-        
-        List<PlayerLocation> playerPosList = new();
+
         var players = Player.GetPlayerRepository.FindAll();
-        
-        foreach (var player in players)
-        {
-            var pos = GetPlayerPosition(player);
 
-            var playerPos = new PlayerLocation()
+        return (from player in players
+            let pos = GetPlayerPosition(player.PlatformId)
+            select new PlayerLocation()
             {
-                Name = player.CharacterName,
-                X = pos.x,
-                Y = pos.y,
-                Z = pos.z,
-            };
+                Name = player.CharacterName, X = pos.x, Y = pos.y, Z = pos.z,
+            }).ToList();
+    }
+    
+    public class TerritoryData
+    {
+        public int PlayerCount { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        
+        public float BX { get; set; }
+        
+        public float BY { get; set; }
+        
+        public float TX { get; set; }
+        
+        public float TY { get; set; }
+    }
+    
+    public static Dictionary<string,TerritoryData> GetPlayerTerritory()
+    {
+        Dictionary<string,TerritoryData>territories = new();
+        var userInRegionQuery = VWorld.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
+        {
+            All = new[] { 
+                ComponentType.ReadOnly<CurrentMapZone>(),
+                ComponentType.ReadOnly<CurrentWorldRegion>(),
+            },
+            None = new[] { ComponentType.ReadOnly<DestroyTag>() }
+        });
 
-            playerPosList.Add(playerPos);
+        var array = userInRegionQuery.ToEntityArray(Allocator.Temp);
+
+        var territoriesInRepo = Territory.GetTerritoryRepository.FindAll();
+
+        foreach (var ters in territoriesInRepo)
+        {
+            
+            territories.Add(ters.territoryName!,new TerritoryData()
+            {
+                PlayerCount = 0,
+                X = ters.CenterX,
+                Y = ters.CenterZ,
+                BX = ters.MinX,
+                BY = ters.MinZ,
+                TX = ters.MaxX,
+                TY = ters.MaxZ,
+            });
+        }
+        
+        foreach (var user in array)
+        {
+            //var userZone = VWorld.Server.EntityManager.GetComponentData<CurrentMapZone>(user);
+            var userRegion = VWorld.Server.EntityManager.GetComponentDataAOT<CurrentWorldRegion>(user);
+            var userTerritory = Territory.GetTerritoryRepository.FindOne(x => x.territoryName == userRegion.CurrentRegion.ToString());
+            if (userTerritory == null)
+            {
+                continue;
+            }
+            if (territories.ContainsKey(userTerritory.territoryName))
+            {
+                territories[userTerritory.territoryName].PlayerCount += 1;
+                userTerritory.playersInRegion = territories[userTerritory.territoryName].PlayerCount;
+                Territory.GetTerritoryRepository.Update(userTerritory);
+            }
         }
 
-        return playerPosList;
+        return territories;
+
     }
 }

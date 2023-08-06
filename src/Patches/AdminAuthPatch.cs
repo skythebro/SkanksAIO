@@ -4,6 +4,7 @@ using BepInEx.Logging;
 using Bloodstone.API;
 using HarmonyLib;
 using ProjectM;
+using SkanksAIO.Utils.Config;
 using Unity.Collections;
 
 namespace SkanksAIO.Patches;

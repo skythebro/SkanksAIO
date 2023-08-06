@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using BepInEx.Logging;
 using SkanksAIO.Discord.Attributes;
+using SkanksAIO.Utils.Config;
 
 namespace SkanksAIO.Discord;
 

@@ -38,20 +38,197 @@
             border: 1px solid #888;
             background-color: #333; /* Darker map container background color */
         }
+
+        /* Popup css */
+        .ol-popup {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 30px 10px 10px;
+            border: 1px solid #ff0000; /* Use red color for the border */
+            border-radius: 10px; /* Increase the border-radius for a smoother appearance */
+            font-size: 14px; /* Slightly increase the font size for better readability */
+            color: #fff; /* Use white color for the text */
+            display: none;
+            z-index: 1000; /* Increase this value if necessary */
+        }
+
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 20px;
+            text-align: center;
+            color: #ff0000; /* Set the desired color for the closer icon */
+            cursor: pointer;
+        }
+
+        .ol-popup-closer:hover {
+            color: #c3c3c3;
+        }
+
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
 </head>
 <body style="">
+
 <div id="header">
     <h1>V rising</h1>
     <hr>
     <div id="subheader">
         <h2>Interactive map</h2>
     </div>
+    <!-- uncomment for coordinate info (debug) you also need to uncomment the code in the script section
+      <div id="coordinates-info" style="position: absolute; top: 10px; left: 10px; background-color: white; padding: 5px;"></div>
+      -->
 </div>
-<div id="map-container" style="width: 99.9%;"></div>
+<div id="map-container" style="width: 99.9%;">
+    <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer">X</a>
+        <div id="popup-content"></div>
+    </div>
+</div>
+
 <script>
+    // Change scale or color of images here if you need to
+    // if you want to add a color to a specific image, add it to the imageStyles object
+    // just add color: 'your color here' to the image you want to change
+    const castleColor = '#12c8d9';
+    const castleScale = 0.75;
+    const miscScale = 1;
+    const imageStyles = {
+        Dot: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
+            scale: 1,
+        }),
+        Gateway: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Gateway.png',
+            scale: 1,
+        }),
+        TeamGateway: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/TeamGateway.png',
+            scale: 1,
+        }),
+        PlayerCastle: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/PlayerCastle.png',
+            scale: castleScale,
+        }),
+        DecayedPlayerCastle: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/DecayedPlayerCastle.png',
+            scale: castleScale,
+        }),
+        PlayerCastleT1: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/PlayerCastleT1.png',
+            scale: castleScale,
+            color: castleColor,
+        }),
+        PlayerCastleT2: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/PlayerCastleT2.png',
+            scale: castleScale,
+            color: castleColor,
+        }),
+        PlayerCastleT3: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/PlayerCastleT3.png',
+            scale: castleScale,
+            color: castleColor,
+        }),
+        PlayerCastleT4: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/PlayerCastleT4.png',
+            scale: castleScale,
+            color: castleColor,
+        }),
+        SiegeGolem: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/SiegeGolem.png',
+            scale: 0.75,
+        }),
+        Anvil: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Anvil.png',
+            scale: miscScale,
+        }),
+        Armor: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Armor.png',
+            scale: miscScale,
+        }),
+        BloodAltar: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/BloodAltar.png',
+            scale: 1,
+        }),
+        Cave: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Cave.png',
+            scale: 0.75,
+        }),
+        Encampment: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Encampment.png',
+            scale: 0.5,
+        }),
+        Fortification: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Fortification.png',
+            scale: 0.5,
+        }),
+        Health: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Health.png',
+            scale: 0.75,
+        }),
+        Magic: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Magic.png',
+            scale: 0.5,
+        }),
+        Mine: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Mine.png',
+            scale: 0.5,
+        }),
+        Relic: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Relic.png',
+            scale: 0.25,
+        }),
+        Research: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Research.png',
+            scale: miscScale,
+        }),
+        Throne: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Throne.png',
+            scale: miscScale,
+        }),
+        Trader: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Trader.png',
+            scale: 0.5,
+        }),
+        WorkBench: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/WorkBench.png',
+            scale: 0.5,
+        }),
+        Marker: new ol.style.Icon({
+            src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Marker.png',
+            scale: 0.75,
+        })
+    };
+
+
+    // DO NOT EDIT ANYTHING BELOW THIS LINE
+    const X_scaling_factor_web = 10880 / 2720
+    const Y_scaling_factor_web = (5440 - (-5440)) / (480 - (-2240))
+    const X_offset = 1
+    const Y_offset = 5440
+    const mapMinZoom = 0;
+    const mapMaxZoom = 6;
+    let Map = null;
+    let playerVectorLayer = null;
+    let markerVectorLayer = null;
+    let playerCounter = 0;
+    let markerCounter = 0;
+    let customPlayerControl = null;
+    let customMarkerControl = null;
+    let visibilityPlayers = true;
+    let visibilityCustomMarkers = true;
+    let Noplayers = false;
+    let selectedFeature = null;
+
     function getPlayerPositions() {
         return fetch('/map-data-player')
             .then(response => response.json()) // Parse the JSON data from the response
@@ -60,52 +237,693 @@
                 return JSON.parse(data);
             })
             .catch(error => {
-                console.error('Error fetching map data:', error);
                 return []; // Return an empty array in case of an error
             });
     }
 
+    function getInterval() {
+        return fetch('/map-update')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text(); // Assuming the server returns the integer as text data
+            })
+            .then(data => {
+                const intValue = parseInt(data); // Parse the received data as an integer
+                if (!isNaN(intValue)) {
+                    return intValue * 1000;
+                    // Use the integer value in your application as needed
+                } else {
+                    return 10000; // Return a default value if the received data is not a valid integer
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                return 10000; // Return a default value in case of an error
+            });
+    }
 
-    // Create the map
-    //const scale_factor_y = (-1834.8673) / (-3815 - 3530) // 0,2498117494894486044928522804629
-    //const scale_factor_x = (-1700.9005 - (-1760)) / (4070 - 3845) // 0,30307435897435897435897435897436
-    const xOffsetIngame = -2720;
-    const yOffsetIngame = -876;
-    const xOffsetOutgame = 10870;
-    const yOffsetOutgame = 3530;
-    const scale_factor_x =  xOffsetIngame / xOffsetOutgame;
-    const scale_factor_y =  yOffsetIngame / yOffsetOutgame;
-    //const scale_factor_x = (xOffsetIngame + xOffsetOutgame) / (-1700.9005 - (-1760));
-    //const scale_factor_y = (yOffsetIngame + yOffsetOutgame) / (-1834.8673);
+    function getRegions() {
+        return fetch('/map-data-regions')
+            .then(response => response.json()) // Parse the JSON data from the response
+            .then(data => {
+                // Convert the JSON data to a JavaScript array (List equivalent)
+                return JSON.parse(data);
+            })
+            .catch(error => {
+                console.error('Error fetching region map data:', error);
+                return []; // Return an empty array in case of an error
+            });
+    }
+
+    function getTerritories() {
+        return fetch('/map-data-Territories')
+            .then(response => response.json()) // Parse the JSON data from the response
+            .then(data => {
+                // Convert the JSON data to a JavaScript array (List equivalent)
+                return JSON.parse(data);
+            })
+            .catch(error => {
+                console.error('Error fetching territory map data:', error);
+                return []; // Return an empty array in case of an error
+            });
+    }
+
+    function getCustomMarkers() {
+        return fetch('/map-data-CustomMarkers')
+            .then(response => response.json()) // Parse the JSON data from the response
+            .then(data => {
+                // Convert the JSON data to a JavaScript array (List equivalent)
+                return JSON.parse(data);
+            })
+            .catch(error => {
+                console.error('Error fetching custom marker map data:', error);
+                return []; // Return an empty array in case of an error
+            });
+    }
+
+    class ShowHideControl extends ol.control.Control {
+        /**
+         * @param {Object} [layer] Control options.
+         * @param shortName
+         * @param longName
+         */
+        constructor(layer, shortName, longName) {
+            const button = document.createElement('button');
+            button.innerHTML = shortName;
+            button.title = longName;
+
+            const element = document.getElementsByClassName('ol-zoom')[0];
+            // Check if the class 'custom-layer-toggle-control' already exists in the className
+            if (element.className.indexOf('custom-layer-toggle-control') === -1) {
+                // If the class does not exist, add it to the className
+                element.className += ' custom-layer-toggle-control';
+            }
+            element.appendChild(button);
+
+            super({
+                element: element,
+                target: null,
+            });
+
+            this.layer = layer;
+            button.addEventListener('click', this.toggleLayerVisibility.bind(this), false);
+        }
+
+        toggleLayerVisibility() {
+            this.layer.setVisible(!this.layer.getVisible());
+        }
+    }
+
+    function insertSpaces(input) {
+        // Use regular expression to add spaces before capital letters and remove underscores
+        return input.replace(/([A-Z])|_/g, function (match, letter) {
+            return letter ? ' ' + letter : '';
+        }).trim();
+    }
+
+    let markerVectorSource = null;
+    let markerClusterStrategy = null;
+
+    function updateCustomMarkers() {
+        getCustomMarkers().then(markerData => {
+
+            let mapMarkerData = [];
+            markerData.forEach(function (data) {
+                mapMarkerData.push({lon: data.X, lat: data.Y, label: data.MarkerName, type: data.MarkerType})
+            });
+
+            let markerFeatures = [];
+
+            mapMarkerData.forEach(function (data) {
+                const X_web = ((data.lon - (-2720)) * X_scaling_factor_web) - X_offset;
+                const Y_web = ((data.lat - (-2240)) * Y_scaling_factor_web) - Y_offset;
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(([X_web, Y_web])),
+                    name: data.label,
+                    markerType: data.type
+                });
+                markerFeatures.push(feature);
+            });
 
 
 
-    const mapMinZoom = 0;
-    const mapMaxZoom = 6;
-    let playerVectorLayer = new ol.layer.Vector;
+
+            markerVectorSource = new ol.source.Vector({
+                features: markerFeatures
+            });
+
+            markerClusterStrategy = new ol.source.Cluster({
+                distance: 40,
+                minDistance: 10,
+                source: markerVectorSource
+            });
+
+            if (markerCounter !== 0) {
+                Map.removeLayer(markerVectorLayer);
+                if (customMarkerControl !== null) {
+                    visibilityCustomMarkers = customMarkerControl.layer.getVisible()
+                    Map.removeControl(customMarkerControl);
+                }
+            }
+
+            markerVectorLayer = new ol.layer.Vector({
+                source: markerClusterStrategy,
+                style: function (feature) {
+                    // Check if it's a cluster feature
+                    if (feature.get('features')) {
+                        const clusterFeatures = feature.get('features');
+                        const markerStyles = [];
+
+                        // Iterate through individual markers in the cluster
+                        clusterFeatures.forEach(function (individualFeature) {
+                            const markerType = individualFeature.get('markerType');
+                            const imageStyle = new ol.style.Style({
+                                image: imageStyles[markerType],
+                                text: new ol.style.Text({
+                                    fill: new ol.style.Fill({ color: 'white' }),
+                                    font: '22px Calibri,sans-serif',
+                                    offsetY: -20,
+                                }),
+                            });
+
+                            if (clusterFeatures.length > 1) {
+                                // Hide the text label for clustered features with more than 1 feature
+                                imageStyle.getText().setText('');
+                            } else {
+                                // Show the text label for clustered features when they are alone
+                                imageStyle.getText().setText(individualFeature.get('name'));
+                            }
+
+                            markerStyles.push(imageStyle);
+                        });
+
+                        return markerStyles;
+                    } else {
+                        // For non-clustered features (individual markers)
+                        const markerType = feature.get('markerType');
+                        const imageStyle = new ol.style.Style({
+                            image: imageStyles[markerType],
+                            text: new ol.style.Text({
+                                fill: new ol.style.Fill({ color: 'white' }),
+                                font: '22px Calibri,sans-serif',
+                                offsetY: -15,
+                            }),
+                        });
+
+                        // Show the text label for individual features
+                        imageStyle.getText().setText(feature.get('name'));
+
+                        return [imageStyle];
+                    }
+                },
+            });
+
+            if (markerCounter === 0) {
+                markerCounter = 1;
+            }
+
+            if (customMarkerControl === null) {
+                customMarkerControl = new ShowHideControl(markerVectorLayer, "TC", "Toggle Custom Markers");
+            } else {
+                customMarkerControl.layer = markerVectorLayer;
+                customMarkerControl.layer.setVisible(visibilityCustomMarkers);
+            }
+
+
+            Map.addControl(customMarkerControl);
+            Map.addLayer(markerVectorLayer);
+
+
+        });
+    }
+
+    function updateTerritory() {
+        getTerritories().then(territoryData => {
+            for (let i = 0; i < territoryData.length; i++) {
+                territoryData[i].Territory = insertSpaces(territoryData[i].Territory);
+            }
+
+            let regionData = [
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Silverlight Hills  lon: 1901, lat: 586
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Dunley Farmlands lon: 5444, lat: 825
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Farbane Woods lon: 5087, lat: -2662
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Cursed Forest lon: 7886, lat: 3931
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Hallowed Mountains lon: 9051, lat: 491
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Gloomrot South lon: 4865, lat: 3649
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Gloomrot North lon: 3054, lat: 3709
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Starter Cave
+            ];
+            let TotalPlayerCounter = 0;
+            for (let i = 0; i < regionData.length; i++) {
+                TotalPlayerCounter += territoryData[i].PlayerCount;
+                regionData[i].label = territoryData[i].Territory;
+                regionData[i].PlayerCount = territoryData[i].PlayerCount;
+                regionData[i].lon = ((territoryData[i].X - (-2720)) * X_scaling_factor_web) - X_offset;
+                regionData[i].lat = ((territoryData[i].Y - (-2240)) * Y_scaling_factor_web) - Y_offset;
+                //console.log("regionName:" + regionData[i].label + " PosX: " + regionData[i].lon + " PosY: " + regionData[i].lat)
+
+            }
+            console.log("Total Players: " + TotalPlayerCounter);
+            //Create features and add them to the vector layer
+            let features = [];
+
+            regionData.forEach(function (data) {
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(([parseFloat(data.lon), parseFloat(data.lat)])),
+                    name: data.label,
+                });
+                features.push(feature);
+            });
+            const vectorSource = new ol.source.Vector({
+                features: features
+            });
+
+            const clusterStrategy = new ol.source.Cluster({
+                distance: 75,
+                source: vectorSource
+            });
+
+
+
+            const vectorLayer = new ol.layer.Vector({
+                source: clusterStrategy,
+                style: function (feature) {
+                    if (feature.get('features')) {
+                        const clusterFeatures = feature.get('features');
+                        const markerStyles = [];
+                        var GloomRotAssigned = false
+                        // Iterate through individual markers in the cluster
+                        clusterFeatures.forEach(function (individualFeature) {
+
+                            const imageStyle = new ol.style.Style({
+                                image: new ol.style.Icon({
+                                    src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
+                                    scale: 1,
+                                }),
+                                text: new ol.style.Text({
+                                    fill: new ol.style.Fill({color: 'white'}),
+                                    font: '22px Calibri,sans-serif',
+                                    offsetY: -15,
+                                }),
+                            });
+
+                            if (clusterFeatures.length > 1) {
+                                // Hide the text label for clustered features with more than 1 feature
+                                if (!GloomRotAssigned) {
+                                    imageStyle.getText().setText('Gloomrot');
+                                    GloomRotAssigned = true;
+                                } else {
+                                    imageStyle.getText().setText('');
+                                }
+                            } else {
+                                // Show the text label for clustered features when they are alone
+                                imageStyle.getText().setText(individualFeature.get('name'));
+                            }
+
+                            markerStyles.push(imageStyle);
+                        });
+
+                        return markerStyles;
+
+                    } else {
+                        const imageStyle = new ol.style.Style({
+                            image: new ol.style.Icon({
+                                src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
+                                scale: 1,
+                            }),
+                            text: new ol.style.Text({
+                                fill: new ol.style.Fill({color: 'white'}),
+                                font: '22px Calibri,sans-serif',
+                                offsetY: -15,
+                            }),
+                        });
+                        // For non-clustered features (individual markers)
+                        // Show the text label for individual features
+                        imageStyle.getText().setText(feature.get('name'));
+
+                        return [imageStyle];
+                    }
+                }
+            });
+            const customControl = new ShowHideControl(vectorLayer, "TR", "Toggle Regions");
+            Map.addControl(customControl);
+            Map.addLayer(vectorLayer);
+
+            const clickableSimpleRegions = [
+                {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 1},
+                {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 2},
+                {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 3},
+                {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 4},
+                {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 5},
+                {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 8}
+            ];
+            const clickableComplexRegions = [
+                {
+                    label: 'Gloomrot North', points: [
+                        [0, 0], // Bottom left
+                        [0, 0], // Top left
+                        [0, 0], // Middle left
+                        [0, 0], // Middle right
+                        [0, 0], // Top right
+                        [0, 0], // Bottom right
+                        [0, 0], // Bottom left
+                    ], territoryId: 7
+                },
+                {
+                    label: 'Gloomrot South', points: [
+                        [0, 0], // Bottom left
+                        [0, 0], // Top left
+                        [0, 0], // Middle left
+                        [0, 0], // Middle right
+                        [0, 0], // Top right
+                        [0, 0], // Bottom right
+                        [0, 0], // Bottom left
+                    ], territoryId: 6
+                },
+                // Add other regions here...
+            ];
+            const regionVectorSource = new ol.source.Vector;
+            const removeOverlappingAreasWithExistingFeatures = (feature, priorityLevels) => {
+                const format = new ol.format.GeoJSON();
+
+                regionVectorSource.getFeatures().forEach((existingFeature) => {
+                    if (
+                        existingFeature.getGeometry().getType() !== 'Polygon' ||
+                        !existingFeature.get('name') ||
+                        existingFeature.get('name') === feature.get('name')
+                    )
+                        return;
+
+                    const existingPriority = priorityLevels.indexOf(existingFeature.get('name'));
+                    const featurePriority = priorityLevels.indexOf(feature.get('name'));
+
+                    // If the existing feature has a higher priority, skip this feature
+                    if (existingPriority > featurePriority) return;
+
+                    var featurePoly = format.writeFeatureObject(feature);
+                    var existingFeaturePoly = format.writeFeatureObject(existingFeature);
+
+                    const intersection = turf.intersect(featurePoly, existingFeaturePoly);
+                    if (intersection) {
+                        var difference = turf.difference(featurePoly, intersection);
+
+                        difference.geometry.coordinates =
+                            difference.geometry.coordinates.filter(
+                                (coordinate) => coordinate.length > 0
+                            );
+
+                        feature.setGeometry(format.readFeature(difference).getGeometry());
+                    }
+                });
+
+                return feature;
+            };
+            // setting up correct shape for complex regions
+            clickableComplexRegions.forEach((region) => {
+                for (let i = 0; i < territoryData.length; i++) {
+                    if (region.label === territoryData[i].Territory && territoryData[i].Territory === "Gloomrot North") {
+                        let BottomLeftX = (((territoryData[i].BX - (-2720)) * X_scaling_factor_web) - X_offset);
+                        let BottomLeftY = (((territoryData[i].BY - (-2240)) * Y_scaling_factor_web) - Y_offset);
+                        let TopRightX = (((territoryData[i].TX - (-2720)) * X_scaling_factor_web) - X_offset);
+                        let TopRightY = (((territoryData[i].TY - (-2240)) * Y_scaling_factor_web) - Y_offset);
+                        let MiddleY = (BottomLeftY + TopRightY) / 2;
+                        let TopLeftX = BottomLeftX;
+                        let MiddleRightX = TopRightX;
+                        let BottomRight = [TopRightX - 1500, BottomLeftY + 40];
+                        let BottomLeft = [BottomLeftX, BottomLeftY + 40];
+                        let TopRight = [TopRightX, TopRightY];
+                        let TopLeft = [TopLeftX, TopRightY];
+                        let OuterMiddleRight = [MiddleRightX, MiddleY - 110];
+                        let InnerMiddleRight = [MiddleRightX - 1500, MiddleY - 110];
+
+                        // are original points
+                        region.points[0] = BottomLeft;// Bottom left
+                        region.points[1] = TopLeft; // Middle left
+                        region.points[2] = TopRight; // Top left
+                        region.points[3] = OuterMiddleRight; // top right
+                        region.points[4] = InnerMiddleRight; // Middle right
+                        region.points[5] = BottomRight; // Bottom right
+                        region.points[6] = BottomLeft;// Bottom left
+                    }
+                    if (region.label === territoryData[i].Territory && territoryData[i].Territory === "Gloomrot South") {
+                        let BottomLeftX = (((territoryData[i].BX - (-2720)) * X_scaling_factor_web) - X_offset);
+                        let BottomLeftY = (((territoryData[i].BY - (-2240)) * Y_scaling_factor_web) - Y_offset);
+                        let TopRightX = (((territoryData[i].TX - (-2720)) * X_scaling_factor_web) - X_offset);
+                        let TopRightY = (((territoryData[i].TY - (-2240)) * Y_scaling_factor_web) - Y_offset);
+                        let MiddleY = (BottomLeftY + TopRightY) / 2;
+                        let TopLeftX = BottomLeftX;
+                        let MiddleLeftX = BottomLeftX;
+                        let BottomRight = [TopRightX - 112, BottomLeftY];
+                        let BottomLeft = [BottomLeftX + 384, BottomLeftY];
+                        let TopRight = [TopRightX - 112, TopRightY];
+                        let TopLeft = [TopLeftX + 1884, TopRightY];
+                        let MiddleInnerLeft = [MiddleLeftX + 1884, MiddleY + 107];
+                        let MiddleLeft = [MiddleLeftX + 384, MiddleY + 107];
+
+
+                        // are original points
+                        region.points[0] = BottomLeft;// Bottom left
+                        region.points[1] = MiddleLeft; // Middle left
+                        region.points[2] = MiddleInnerLeft; // Top left
+                        region.points[3] = TopLeft; // top right
+                        region.points[4] = TopRight; // Middle right
+                        region.points[5] = BottomRight; // Bottom right
+                        region.points[6] = BottomLeft;// Bottom left
+                    }
+                }
+            });
+
+            // setting up correct shape for simple regions
+            for (let i = 0; i < clickableSimpleRegions.length; i++) {
+                if (i === 5) {
+                    clickableSimpleRegions[i].label = territoryData[i + 2].Territory;
+                    clickableSimpleRegions[i].bottomLeft = [(((territoryData[i + 2].BX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i + 2].BY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
+                    clickableSimpleRegions[i].topRight = [(((territoryData[i + 2].TX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i + 2].TY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
+                    continue;
+                }
+                clickableSimpleRegions[i].label = territoryData[i].Territory;
+                clickableSimpleRegions[i].bottomLeft = [(((territoryData[i].BX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i].BY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
+                clickableSimpleRegions[i].topRight = [(((territoryData[i].TX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i].TY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
+            }
+
+            clickableSimpleRegions.forEach(function (data) { //simple fix for overlapping regions
+                if (data.label === 'Gloomrot  North') {
+
+                    data.bottomLeft[1] = data.bottomLeft[1] + 41;
+                }
+                if (data.label === 'Silverlight Hills') {
+
+                    data.topRight[1] = data.topRight[1] + 2;
+                    data.topRight[0] = data.topRight[0] - 150;
+                    data.bottomLeft[1] = data.bottomLeft[1] - 215;
+                }
+                if (data.label === 'Dunley Farmlands') {
+
+                    data.bottomLeft[0] = data.bottomLeft[0] + 150;
+                }
+                if (data.label === 'Farbane Woods') {
+
+                    data.topRight[1] = data.topRight[1] - 344;
+                }
+                if (data.label === 'Cursed Forest') {
+
+                    data.bottomLeft[1] = data.bottomLeft[1] - 8;
+                }
+
+            });
+            //simple fix for overlapping regions
+            clickableSimpleRegions.sort((a, b) => b.territoryId - a.territoryId);
+            clickableComplexRegions.sort((a, b) => b.territoryId - a.territoryId);
+            const polygonStyle = new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(255, 255, 255, 0)', // Transparent fill color
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(0, 0, 0, 0)', // Transparent stroke color
+                    width: 0, // No border
+                }),
+            });
+            clickableComplexRegions.forEach((region) => {
+                const polygon = new ol.geom.Polygon([region.points]);
+
+                const feature = new ol.Feature({
+                    geometry: polygon,
+                    name: region.label,
+                    territoryId: region.territoryId,
+                });
+                feature.setStyle(polygonStyle)
+                const priorityLevels = ['Gloomrot North', 'Gloomrot South'];
+                const newFeature = removeOverlappingAreasWithExistingFeatures(feature, priorityLevels);
+                regionVectorSource.addFeature(newFeature)
+            });
+
+            clickableSimpleRegions.forEach((region) => {
+                const rectangle = new ol.geom.Polygon([
+                    [
+                        region.bottomLeft,
+                        [region.bottomLeft[0], region.topRight[1]],
+                        region.topRight,
+                        [region.topRight[0], region.bottomLeft[1]],
+                        region.bottomLeft, // Close the polygon
+                    ],
+                ]);
+
+                const feature = new ol.Feature({
+                    geometry: rectangle,
+                    name: region.label,
+                    territoryId: region.territoryId,
+                });
+                feature.setStyle(polygonStyle)
+
+                const priorityLevels = ['Dunley Farmlands'];
+                const newFeature = removeOverlappingAreasWithExistingFeatures(feature, priorityLevels);
+                regionVectorSource.addFeature(newFeature)
+
+            });
+
+
+            const regionVectorLayer = new ol.layer.Vector({
+                source: regionVectorSource
+            });
+
+            Map.addLayer(regionVectorLayer);
+
+            const customSelectStyle = new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(255, 255, 255, 0.1)', // Transparent fill color
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(0, 0, 0, 0)', // Transparent stroke color
+                    width: 0, // No border
+                }),
+            });
+
+
+            // select region
+            const select = new ol.interaction.Select({
+                layers: [regionVectorLayer],
+                style: customSelectStyle, // Use the custom style
+                condition: ol.events.condition.singleClick, // Enable selection on single click
+            });
+
+            // Add the select interaction to the map
+            Map.addInteraction(select);
+
+
+            const popup = document.getElementById('popup');
+            const closer = document.getElementById('popup-closer');
+
+            // Add a click event listener to the closer element to hide the popup
+            closer.onclick = function () {
+                popup.style.display = 'none';
+            };
+
+            // Handle the 'select' event to respond to clicks
+            select.on('select', (event) => {
+                if (event.selected.length > 0) {
+                    // Do something with the selected feature
+                    const feature = event.selected[0];
+                    const popupOffsetY = 50;
+                    const name = feature.get('name');
+
+                    if (selectedFeature === feature) {
+                        // If the same feature is selected again, keep the popup open and update its content
+                        const popupContent = document.getElementById('popup-content');
+
+                        regionData.forEach(function (data) {
+                            if (data.label === name) {
+                                if (data.PlayerCount > 1) {
+                                    popupContent.innerHTML = `Region: ${data.label}<br> has ${data.PlayerCount} players`;
+                                } else if (data.PlayerCount === 1) {
+                                    popupContent.innerHTML = `Region: ${data.label}<br> has ${data.PlayerCount} player`;
+                                } else {
+                                    popupContent.innerHTML = `Region: ${data.label}<br> has no players`;
+                                }
+                            }
+                        });
+                    } else {
+                        // If a different feature is selected, show the popup and update its position and content
+                        selectedFeature = feature;
+
+                        // Get the feature's geometry (in this case, it's a Polygon)
+                        const geometry = feature.getGeometry();
+
+                        // Get the center of the geometry (you can adjust this for your custom shapes)
+                        const center = ol.extent.getCenter(geometry.getExtent());
+
+                        // Convert the center coordinates to pixel coordinates
+                        const pixel = Map.getPixelFromCoordinate(center);
+
+                        // Position the popup at the center of the feature
+                        popup.style.display = 'block';
+                        popup.style.left = pixel[0] + 'px';
+                        popup.style.top = pixel[1]+popupOffsetY + 'px';
+
+                        // Show information in the popup content
+                        const popupContent = document.getElementById('popup-content');
+
+                        regionData.forEach(function (data) {
+                            if (data.label === name) {
+                                if (data.PlayerCount > 1) {
+                                    popupContent.innerHTML = data.label + '<br> has ' + data.PlayerCount + ' players';
+                                } else if (data.PlayerCount === 1) {
+                                    popupContent.innerHTML = data.label + '<br> has ' + data.PlayerCount + ' player';
+                                } else {
+                                    popupContent.innerHTML = data.label + '<br> has no players';
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    // If no feature is selected, hide the popup
+                    popup.style.display = 'none';
+                    selectedFeature = null; // Reset the selected feature variable
+                }
+            });
+
+
+            //let territoryPlayerCountElement = document.getElementById(territoryName + "-player-count");
+            //if (territoryPlayerCountElement) {
+            //    territoryPlayerCountElement.innerHTML = territoryPlayerCount;
+            //}
+        })
+    }
 
     function updatePlayerPositions() {
         getPlayerPositions().then(playerPositions => {
-
+            try {
+                if (playerPositions.Name === "EMPTYSKANKSERVER") Noplayers = true;
+            } catch (error) {
+                Noplayers = false;
+            }
+            if (Noplayers) return;
+            if (playerPositions.length === 0) {
+                return
+            }
             let playerFeatures = [];
+
 
             playerPositions.forEach(function (position) {
                 let playerName = position.Name;
-                let playerX = position.X * scale_factor_x;
-                let playerY = position.Y * scale_factor_y;
+                let playerX = position.X;
+                let playerY = position.Y;
 
-                // 10870+ -1760 * 0,2498117494894486044928522804629
-                // 3530+ -1834.8673*  0,30307435897435897435897435897436
+                const X_web = ((playerX - (-2720)) * X_scaling_factor_web) - X_offset;
+                const Y_web = ((playerY - (-2240)) * Y_scaling_factor_web) - Y_offset;
 
-                const feature = new ol.Feature({
-                    geometry: new ol.geom.Point(([playerX, playerY])),
-                    name: playerName,
-                });
+                if (X_web !== 10879 && Y_web !== 3520) { //0 0 ingame
 
-                playerFeatures.push(feature);
-                console.log("scalefactorx:" + scale_factor_x + " scalefactory: " + scale_factor_y)
-                console.log("name:" + playerName + " PosX: " + playerX + " PosY: " + playerY)
 
+                    const feature = new ol.Feature({
+                        geometry: new ol.geom.Point(([X_web, Y_web])),
+                        name: playerName,
+                    });
+
+                    playerFeatures.push(feature);
+                    //console.log("name:" + playerName + " PosX: " + X_web + " PosY: " + Y_web)
+                }
 
             });
 
@@ -115,15 +933,24 @@
 
             const playerImageStyle = new ol.style.Style({
                 image: new ol.style.Icon({
-                    src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
+                    color: 'red',
+                    src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Player.png',
                     scale: 1,
                 }),
                 text: new ol.style.Text({
-                    fill: new ol.style.Fill({color: 'green'}),
+                    fill: new ol.style.Fill({color: 'white'}),
                     font: '22px Calibri,sans-serif',
                     offsetY: -15,
                 }),
             });
+
+            if (playerCounter !== 0) {
+                Map.removeLayer(playerVectorLayer);
+                if (customPlayerControl !== null) {
+                    visibilityPlayers = customPlayerControl.layer.getVisible()
+                    Map.removeControl(customPlayerControl);
+                }
+            }
 
             playerVectorLayer = new ol.layer.Vector({
                 source: playerVectorSource,
@@ -132,6 +959,22 @@
                     return [playerImageStyle];
                 }
             });
+
+            if (playerCounter === 0) {
+                playerCounter = 1;
+            }
+
+            if (customPlayerControl === null) {
+                customPlayerControl = new ShowHideControl(playerVectorLayer, "TP", "Toggle Players");
+            } else {
+                customPlayerControl.layer = playerVectorLayer;
+                customPlayerControl.layer.setVisible(visibilityPlayers);
+            }
+
+
+            Map.addControl(customPlayerControl);
+            Map.addLayer(playerVectorLayer);
+
         });
     }
 
@@ -153,7 +996,7 @@
             extent: viewExtent,
         });
 
-        const map = new ol.Map({
+        Map = new ol.Map({
             target: 'map-container',
             view: myView,
         });
@@ -172,71 +1015,84 @@
             })
         });
 
-        const regionData = [
+        updateTerritory();
+        // Fetch data initially and get the vector layer
+        updatePlayerPositions()
+        let interval = 10000; // default if something goes wrong
+        getInterval().then(result => {
+            interval = result;
 
-            {lon: 2 * 1527.00000, lat: 4.3 * Math.abs(-862.50000), label: 'Gloomrot North'},//x:y:3709
-            {lon: 2 * 2432.50000, lat: 4.1 * Math.abs(-890.00000), label: 'Gloomrot South'},//x:y:3649
-            {lon: 2 * 3943.00000, lat: 5.2 * Math.abs(-756.00000), label: 'Cursed Forest'}, //x:y:3931.2
-            {lon: 2 * 950.50000, lat: Math.abs(-2431.50000) / 4.15, label: 'Silverlight Hills'},//x:y:586
-            {lon: 2 * 2722.00000, lat: Math.abs(-2309.50000) / 2.8, label: 'Dunley Farmlands'}, //x:y:825
-            {lon: 2 * 4525.50000, lat: Math.abs(-2455.00000) / 5, label: 'Hallowed Mountains'}, //x:y:491
-            {lon: 2 * 2543.50000, lat: -4046.00000 / 1.52, label: 'Farbane Woods'},//x:y:-2662
-            {lon: 4284.0570888888915 , lat:  1319.5056608032676, label: 'Playertest'},//x:y:-2662
-        ];
-
-        //Create features and add them to the vector layer
-        let features = [];
-
-        regionData.forEach(function (data) {
-            const feature = new ol.Feature({
-                geometry: new ol.geom.Point(([parseFloat(data.lon), parseFloat(data.lat)])),
-                name: data.label,
-            });
-            features.push(feature);
-        });
-
-        const vectorSource = new ol.source.Vector({
-            features: features
+            if (!Noplayers) {
+                setInterval(() => {
+                    updatePlayerPositions();
+                }, interval);
+            }
+        }).catch(error => {
+            if (!Noplayers) {
+                setInterval(() => {
+                    updatePlayerPositions();
+                }, interval);
+            }
+            // Handle any errors that might occur during the fetch or parsing process
+            console.error('Error:', error);
         });
 
 
+        updateCustomMarkers();
+        getInterval().then(result => {
+            interval = result;
 
 
-        const imageStyle = new ol.style.Style({
-            image: new ol.style.Icon({
-                src: 'https://skythebro.github.io/SkanksAIO/templates/JS/leaflet/images/Dot.png',
-                scale: 1,
-            }),
-            text: new ol.style.Text({
-                fill: new ol.style.Fill({color: 'white'}),
-                font: '22px Calibri,sans-serif',
-                offsetY: -15,
-            }),
+            setInterval(() => {
+                updateCustomMarkers();
+            }, interval);
+
+        }).catch(error => {
+            setInterval(() => {
+                updateCustomMarkers();
+            }, interval);
+
+            // Handle any errors that might occur during the fetch or parsing process
+            console.error('Error:', error);
         });
 
-        const vectorLayer = new ol.layer.Vector({
-            source: vectorSource,
-            style: function (feature) {
-                imageStyle.getText().setText(feature.get('name'));
-                return [imageStyle];
+        Map.addLayer(layer)
+
+        Map.on('pointerdrag', () => {
+            if (selectedFeature) {
+                var popup = document.getElementById('popup');
+                popup.style.display = 'none';
+                selectedFeature = null; // Reset the selected feature variable
             }
         });
 
-        // Fetch data initially and get the vector layer
-        updatePlayerPositions()
+        //debug so i can see coords
+        // const coordinatesInfo = document.getElementById('coordinates-info');
+        // Map.on('click', function (event) {
+        //     const coordinate = event.coordinate;
+        //     const [xMap, yMap] = coordinate;
+        //     const [xGame, yGame] = [((xMap + X_offset) / X_scaling_factor_web) + (-2720), ((yMap + Y_offset) / Y_scaling_factor_web) + (-2240)];
+        //
+        //     coordinatesInfo.innerHTML = `Map coords: X: ${xMap.toFixed(2)}, Y: ${yMap.toFixed(2)}<br>Game coords: xGame: ${xGame.toFixed(2)}, yGame: ${yGame.toFixed(2)}`;
+        // });
 
-        setInterval(() => {
-            updatePlayerPositions();
-            playerVectorLayer.changed();
-
-        }, 10000); // Fetch data every 10 seconds (adjust the interval as needed)
-
-        map.addLayer(layer)
-        map.addLayer(vectorLayer);
-        map.addLayer(playerVectorLayer);
+        Map.on('click', (e) => {
+            markerVectorLayer.getFeatures(e.pixel).then((clickedFeatures) => {
+                if (clickedFeatures.length) {
+                    // Get clustered Coordinates
+                    const features = clickedFeatures[0].get('features');
+                    if (features.length > 1) {
+                        const extent = ol.extent.boundingExtent(
+                            features.map((r) => r.getGeometry().getCoordinates())
+                        );
+                        Map.getView().fit(extent, {duration: 1000, padding: [50, 50, 50, 50]});
+                    }
+                }
+            });
+        });
 
         window.addEventListener("resize", function () {
-            map.updateSize();
+            Map.updateSize();
         });
     }
 

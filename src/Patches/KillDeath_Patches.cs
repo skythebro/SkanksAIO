@@ -8,6 +8,7 @@ using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
 using SkanksAIO.Models;
 using SkanksAIO.Utils;
+using SkanksAIO.Utils.Config;
 using Unity.Collections;
 using Unity.Entities;
 

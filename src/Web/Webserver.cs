@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Text.Json;
@@ -12,7 +14,9 @@ using Scriban;
 namespace SkanksAIO.Web;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public class ControllerAttribute : Attribute { }
+public class ControllerAttribute : Attribute
+{
+}
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public class RouteAttribute : Attribute
@@ -98,6 +102,7 @@ internal class Router
         {
             this.routes.Add(method.ToUpper(), new Node(""));
         }
+
         this.routes[method.ToUpper()].Insert(path, handler);
     }
 
@@ -346,7 +351,7 @@ internal class Router
         {
             var t = Template.Parse(templateContent);
             var output = t.Render(result);
-            
+
             response.ContentType = "text/html";
             return output;
         }
@@ -381,28 +386,52 @@ internal class WebServer
         var controllers = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => t.IsDefined(typeof(ControllerAttribute), false));
 
+
         // register all controllers
         foreach (var controller in controllers)
         {
-            var methods = controller.GetMethods();
-            foreach (var method in methods)
+            if (Utils.Config.Settings.EnableInteractiveMap.Value)
             {
-                var attr2 = method.GetCustomAttribute<RouteAttribute>();
-                if (attr2 != null)
+                if (controller.Name == "MapController")
                 {
-                    foreach (var m in attr2.Methods)
+                    continue;
+                }
+                var methods = controller.GetMethods();
+                foreach (var method in methods)
+                {
+                    var attr2 = method.GetCustomAttribute<RouteAttribute>();
+                    if (attr2 != null)
                     {
-                        router.Insert(m, attr2.Path, method);
+                        foreach (var m in attr2.Methods)
+                        {
+                            router.Insert(m, attr2.Path, method);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var methods = controller.GetMethods();
+                foreach (var method in methods)
+                {
+                    var attr2 = method.GetCustomAttribute<RouteAttribute>();
+                    if (attr2 != null)
+                    {
+                        foreach (var m in attr2.Methods)
+                        {
+                            router.Insert(m, attr2.Path, method);
+                        }
                     }
                 }
             }
         }
 
-        _listener.Prefixes.Add($"http://*:{port.ToString()}/");
+        _listener.Prefixes.Add($"http://+:{port.ToString()}/");
         _listener.Start();
         accept();
         Plugin.Logger?.LogMessage($"[Webserver] Listening on port {port}");
     }
+
 
     public void Stop()
     {
@@ -412,25 +441,33 @@ internal class WebServer
 
     private void accept()
     {
-        _listener.BeginGetContext(new AsyncCallback(ListenerCallback), _listener);
+        _listener.BeginGetContext(ListenerCallback, _listener);
     }
 
     public void OnRequestReceived(HttpListenerContext context)
     {
-        HttpListenerRequest request = context.Request;
-        HttpListenerResponse response = context.Response;
-
-        var responseString = router.RouteRequest(request, response).GetAwaiter().GetResult();
-
-        byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-        response.ContentLength64 = buffer.Length;
-        System.IO.Stream output = response.OutputStream;
-        output.Write(buffer, 0, buffer.Length);
-        output.Close();
-
-        if (_listener.IsListening)
+        try
         {
-            accept();
+            HttpListenerRequest request = context.Request;
+            HttpListenerResponse response = context.Response;
+
+            var responseString = router.RouteRequest(request, response).GetAwaiter().GetResult();
+            //Plugin.Logger?.LogWarning("response: "+responseString);
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+            response.ContentLength64 = buffer.Length;
+            Stream output = response.OutputStream;
+            output.Write(buffer, 0, buffer.Length);
+            output.Close();
+
+            if (_listener.IsListening)
+            {
+                accept();
+            }
+        }
+        catch (HttpListenerException e)
+        {
+            Plugin.Logger?.LogError(
+                $"[Webserver] Error too many requests! " + e.Message + "Stacktrace: " + e.StackTrace);
         }
     }
 
@@ -438,5 +475,8 @@ internal class WebServer
     {
         HttpListenerContext context = _listener.EndGetContext(result);
         behaviour!.QueueRequest(context);
+
+        // Continue accepting new connections
+        accept();
     }
 }

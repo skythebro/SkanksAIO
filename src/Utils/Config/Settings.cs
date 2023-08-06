@@ -1,18 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
-using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Core.Logging.Interpolation;
-using BepInEx.Logging;
-using Epic.OnlineServices.Stats;
-using ProjectM.UI;
 using SkanksAIO.Web;
 
-
-namespace SkanksAIO
+namespace SkanksAIO.Utils.Config
 {
     public class Settings
     {
@@ -34,6 +25,7 @@ namespace SkanksAIO
         internal static ConfigEntry<bool> EnablePvPKillTracker { get; private set; }
         internal static ConfigEntry<bool> EnableInteractiveMap { get; private set; }
         internal static ConfigEntry<int> InteractiveMapUpdateInterval { get; private set; }
+        internal static ConfigEntry<bool> TrackPlayersOnMap { get; private set; }
         internal static ConfigEntry<int>? WebPort { get; private set; }
 
         internal static WebServer? WsInstance { get; private set; } = null;
@@ -63,8 +55,6 @@ namespace SkanksAIO
         internal static ConfigEntry<bool> AnnounceRandomOrder { get; private set; }
 
         internal static ConfigEntry<bool> AnnounceEnabled { get; private set; }
-
-        internal static List<ConfigEntry<string>> AnnounceMessages { get; private set; }
 
         internal static ConfigEntry<bool> ShowUserConnectedInDc { get; private set; }
 
@@ -119,8 +109,10 @@ namespace SkanksAIO
             EnableWebServer = config.Bind("Web", "Enable", false, "Enable the webserver");
             WebPort = config.Bind("Web", "Port", 8080, "Port the webserver will run on");
             EnableInteractiveMap = config.Bind("Web", "EnableInteractiveMap", false, "Enables the interactive map");
-            InteractiveMapUpdateInterval = config.Bind("Web", "InteractiveMapUpdateInterval", 30,
-                "Interval in seconds for the interactive map to update");
+            TrackPlayersOnMap = config.Bind("Web", "TrackPlayersOnMap", false,
+                "Enables tracking of players on the interactive map");
+            InteractiveMapUpdateInterval = config.Bind("Web", "InteractiveMapUpdateInterval", 10,
+                "Interval in seconds for the interactive map to update. Don't set this too low or you might get rate limited.");
 
             #endregion
 
@@ -180,13 +172,16 @@ namespace SkanksAIO
             {
                 App.Instance.Restart();
             }
-
+            
             #endregion
+            
         }
 
         internal static void Reload(ConfigFile config)
         {
             Plugin.Logger?.LogDebug("config reloaded");
+            JsonConfigHelper.CreateJsonConfigs();
+            JsonConfigHelper.LoadAllConfigs();
             Initialize(config);
         }
     }

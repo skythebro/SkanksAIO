@@ -8,6 +8,7 @@ using ProjectM.Network;
 using SkanksAIO.Chat;
 using SkanksAIO.Discord;
 using SkanksAIO.Utils;
+using SkanksAIO.Utils.Config;
 using UnityEngine;
 
 namespace SkanksAIO;

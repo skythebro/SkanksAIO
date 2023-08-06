@@ -7,6 +7,7 @@ using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
 using SkanksAIO.Models;
+using SkanksAIO.Utils.Config;
 using Stunlock.Network;
 using Unity.Collections;
 using Unity.Entities;

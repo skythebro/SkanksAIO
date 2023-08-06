@@ -14,73 +14,20 @@ public static class Messaging
     
     public static void SendMessage(User user, ServerChatMessageType msgType, string message)
     {
-        /*
-        var entity = em.CreateEntity(
-            ComponentType.ReadOnly<NetworkEventType>(),      //event type
-            ComponentType.ReadOnly<SendEventToUser>(),       //send it to user
-            ComponentType.ReadOnly<ChatMessageServerEvent>() // what event
-        );
-
-        NetworkId nid = em.GetComponentData<NetworkId>(user.LocalCharacter._Entity);
-
-        var ev1 = new ChatMessageServerEvent
+        if (msgType == ServerChatMessageType.Global)
         {
-            MessageText = message,
-            MessageType = msgType,
-            FromUser = nid,
-            TimeUTC = DateTime.Now.ToFileTimeUtc()
-        };
-
-        entity.WithComponentData((ref SendEventToUser eventToUser) =>
+            ServerChatUtils.SendSystemMessageToAllClients(em, message);
+        }
+        else if (msgType == ServerChatMessageType.System)
         {
-            eventToUser.UserIndex = user.Index;
-        });
-        
-        entity.WithComponentData((ref NetworkEventType net) =>
-        {
-            net.EventId = NetworkEvents.EventId_ChatMessageServerEvent;
-            net.IsAdminEvent = false;
-            net.IsDebugEvent = false;
-        });
-
-        //fire off the event
-        em.SetComponentData(entity, ev1);
-        */
+            ServerChatUtils.SendSystemMessageToClient(em, user, message);
+        }
     }
 
     public static void SendMessage(Entity userEntity, ServerChatMessageType msgType, string message)
     {
-        var entity = em.CreateEntity(
-            ComponentType.ReadOnly<NetworkEventType>(),      //event type
-            ComponentType.ReadOnly<SendEventToUser>(),       //send it to user
-            ComponentType.ReadOnly<ChatMessageServerEvent>() // what event
-        );
-
         em.TryGetComponentData<User>(userEntity, out var user);
-        em.TryGetComponentData<NetworkId>(userEntity, out var nid);
-
-        var ev1 = new ChatMessageServerEvent
-        {
-            MessageText = message,
-            MessageType = msgType,
-            FromUser = nid,
-            TimeUTC = DateTime.Now.ToFileTimeUtc()
-        };
-
-        entity.WithComponentData((ref SendEventToUser eventToUser) =>
-        {
-            eventToUser.UserIndex = user.Index;
-        });
-
-        entity.WithComponentData((ref NetworkEventType net) =>
-        {
-            net.EventId = NetworkEvents.EventId_ChatMessageServerEvent;
-            net.IsAdminEvent = false;
-            net.IsDebugEvent = false;
-        });
-        
-        //fire off the event
-        em.SetComponentData(entity, ev1);
+        ServerChatUtils.SendSystemMessageToClient(em, user, message);
     }
 
     public static void SendGlobalMessage(ServerChatMessageType msgType, string message)

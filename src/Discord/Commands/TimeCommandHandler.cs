@@ -7,6 +7,7 @@ using SkanksAIO.Utils;
 using System.Threading.Tasks;
 using Bloodstone.API;
 using ProjectM.Scripting;
+using SkanksAIO.Utils.Config;
 
 namespace SkanksAIO.Discord.Commands;
 
