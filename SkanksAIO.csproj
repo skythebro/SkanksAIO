@@ -53,6 +53,13 @@
     <ItemGroup>
       <None Remove="img.png" />
       <None Remove="V rising web server.png" />
+      <None Remove="discord\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="discord\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Remove="discord\**" />
     </ItemGroup>
     
 </Project>
