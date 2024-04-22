@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using BepInEx.Logging;
+using ProjectM.Network;
 using SkanksAIO.Discord.Attributes;
+using SkanksAIO.Utils;
 using SkanksAIO.Utils.Config;
 
 namespace SkanksAIO.Discord;
@@ -42,10 +44,13 @@ class DiscordCommandLib
         behaviour.MessageReceived += OnMessageReceived;
         behaviour.SlashCommandExecuted += OnSlashCommandExecuted;
 
-        client = new DiscordSocketClient(new DiscordSocketConfig()
+        var config = new DiscordSocketConfig
         {
             UseInteractionSnowflakeDate = false,
-        });
+            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+        };
+        
+        client = new DiscordSocketClient(config);
 
         client.Log += (log) =>
         {
@@ -65,6 +70,22 @@ class DiscordCommandLib
             behaviour.QueueMessage(message);
             return Task.CompletedTask;
         };
+    }
+    
+    private Task ClientOnMessageReceived(SocketMessage socketMessage)
+    {
+        
+        //Activity is not from a Bot.
+        if (!socketMessage.Author.IsBot)
+        {
+            if (socketMessage.Channel.Id != Settings.ChannelId!.Value) return Task.CompletedTask;
+
+            Messaging.SendGlobalMessage(ServerChatMessageType.Global,
+                $"[Discord] {socketMessage.Author.Username}: {socketMessage.Content}");
+            Plugin.Logger?.LogInfo($"[Discord] {socketMessage.Author.Username}: {socketMessage.Content}");
+        }
+
+        return Task.CompletedTask;
     }
 
     public async Task Start()
@@ -270,11 +291,7 @@ class DiscordCommandLib
 
     private async Task OnMessageReceived(SocketMessage message)
     {
-        if (message.Author.IsBot) return;
-        if (message.Channel.Id != Settings.ChannelId!.Value) return;
-        if (!(message is SocketUserMessage)) return;
-
-        await (Task)MessageReceived?.Invoke((message as SocketUserMessage)!)!;
+        await ClientOnMessageReceived(message);
     }
 
     private static bool TryGetValue(IReadOnlyCollection<SocketSlashCommandDataOption> dict, string key,

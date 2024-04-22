@@ -46,7 +46,7 @@ internal class ChatCommandLib
             var em = VWorld.Server.EntityManager;
             var chatMessageEvent = em.GetComponentDataAOT<ChatMessageEvent>(chatMessageEntity);
             var rawMessage = chatMessageEvent.MessageText.ToString();
-            if (!rawMessage.StartsWith(Settings.ChatCommandPrefix.Value)) return true;
+            if (!rawMessage!.StartsWith(Settings.ChatCommandPrefix.Value)) return true;
 
             var fromCharacter = em.GetComponentDataAOT<FromCharacter>(chatMessageEntity);
             em.TryGetComponentData<User>(fromCharacter.User, out var user);
@@ -57,7 +57,7 @@ internal class ChatCommandLib
 
             if (!commands.ContainsKey(command))
             {
-                ServerChatUtils.SendSystemMessageToClient(em, user, $"Unknown command: {command}");
+                Messaging.SendMessage(user, ServerChatMessageType.System, $"Unknown command: {command}");
                 Plugin.Logger?.LogError($"[ChatCommandLib] Unknown command: {command}");
                 return true;
             }

@@ -4,6 +4,7 @@ Forked from [phillipsOG](https://github.com/phillipsOG/SkanksAIO) and updated to
 A V-Rising mod that connects your server to discord and a webserver plus some extra stuff.
 Please report any issues [here](https://github.com/skythebro/SkanksAIO/issues).
 
+* Now also has discord to ingame chat support
 
 ## Installation
 * Extract and put the **_SkanksAIO_** folder into your `(Vrising Server)\BepInEx\plugins folder.`
@@ -223,10 +224,22 @@ This file can be filled with steamid64's of VIP users. (Previously known as Skan
 ---
 
 # Video tutorial for setting up discord bot and extra info
-- This [Youtube](https://youtu.be/4XswiJ1iUaw) video shows how to create and invite a bot to your server 
-- In the **_URL generator_** section make sure you click on `Send Messages`, `Read Message History`, `Read Messages/View Channels` and `Manage Messages`
+- This **outdated** [Youtube](https://youtu.be/4XswiJ1iUaw) video shows how to create and invite a bot to your server 
+- In the **_Installation_** section at **_Default Install Settings_** make sure you click on `Send Messages`, `Read Message History`, `Read Messages/View Channels` and `Manage Messages`
+
+![img.png](https://i.imgur.com/H18Kklp.png)
+
+- For the bot make sure that message content intent is enabled in the _**Bot tab**_ otherwise the bot cannot read the message text and the message will be blank or it just will not work.
+
+![img.png](https://i.imgur.com/r3obPuS.png)
+
+- Lastly use the install link to invite the bot to your server.
+
+![img.png](https://i.imgur.com/3BKuC2Y.png)
+
 - Then the only thing you have to do is put your bot token into the config file and get the id's of the channel and the admin server role and put those in the config too.
 - Make sure you have discord developer mode _**enabled**_ otherwise you cannot copy any ID's.
+
 - How to copy channel ID:
 
 ![img.png](https://i.imgur.com/cFOGfeY.png)
@@ -240,7 +253,7 @@ This file can be filled with steamid64's of VIP users. (Previously known as Skan
 ---
 
 ### DISCLAIMER
-- I cannot guarantee it will work on docker hosted servers!
+- I cannot guarantee it will work on anything other than windows hosted servers!
 
 ```ini
 [Announcements]

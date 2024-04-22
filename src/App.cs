@@ -87,13 +87,36 @@ public class App : MonoBehaviour
         _currenttime = 0f;
     }
 
-    private static Task OnMessageReceived(SocketUserMessage message)
+    private async Task OnMessageReceived(SocketUserMessage message)
     {
-        Messaging.SendGlobalMessage(ServerChatMessageType.Global,
-            $"[Discord] {message.Author.Username}: {message.Content}");
-        Plugin.Logger?.LogInfo($"[Discord] {message.Author.Username}: {message.Content}");
+        try
+        {
+            await ClientOnMessageReceived(message);
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger?.LogError($"[Discord] error: {e.Message} + {e.StackTrace}");
+        }
+        
+    }
+    
+    private async Task ClientOnMessageReceived(SocketMessage socketMessage)
+    {
+        await Task.Run(() =>
+        {
+            //Activity is not from a Bot.
+            if (!socketMessage.Author.IsBot)
+            {
+                Plugin.Logger?.LogDebug("channel id message: " + socketMessage.Channel.Id + " settings channel id: " + Settings.ChannelId!.Value);
+                if (socketMessage.Channel.Id != Settings.ChannelId!.Value) return Task.CompletedTask;
 
-        return Task.CompletedTask;
+                Messaging.SendGlobalMessage(ServerChatMessageType.Global,
+                    $"[Discord] {socketMessage.Author.Username}: {socketMessage.Content}");
+                Plugin.Logger?.LogInfo($"[Discord] {socketMessage.Author.Username}: {socketMessage.Content}");
+                
+            }
+            return Task.CompletedTask;
+        });
     }
 
     private void Start()

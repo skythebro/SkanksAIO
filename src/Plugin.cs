@@ -12,8 +12,10 @@ using Bloodstone.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using LiteDB;
+using ProjectM.Network;
 using SkanksAIO.Discord;
 using SkanksAIO.Logger.Handler;
+using SkanksAIO.Utils;
 using SkanksAIO.Utils.Config;
 using SkanksAIO.Web;
 
@@ -27,7 +29,7 @@ public class Plugin : BasePlugin, IRunOnInitialized
     internal static Plugin? Instance { get; private set; }
 
     public static readonly string ConfigPath = Path.Combine(Paths.ConfigPath, "SkanksAIO");
-    
+
     internal static DateTime ServerStartTime { get; private set; }
 
     internal static SkanksAIO.Logger.Logger Logger = null!;
@@ -79,21 +81,28 @@ public class Plugin : BasePlugin, IRunOnInitialized
     public void OnGameInitialized()
     {
         if (!VWorld.IsServer) return;
+        try
+        {
+            Logger = new SkanksAIO.Logger.Logger();
 
-        Logger = new SkanksAIO.Logger.Logger();
+            Logger.RegisterLogHandler(new ConsoleLogHandler());
+            Logger.RegisterLogHandler(new FileLogHandler());
+            Logger.RegisterLogHandler(new DiscordLogHandler());
 
-        Logger.RegisterLogHandler(new ConsoleLogHandler());
-        Logger.RegisterLogHandler(new FileLogHandler());
-        Logger.RegisterLogHandler(new DiscordLogHandler());
+            Settings.Reload(Config);
 
-        Settings.Reload(Config);
-        
-        ClassInjector.RegisterTypeInIl2Cpp<App>();
-        ClassInjector.RegisterTypeInIl2Cpp<WebBehaviour>();
-        ClassInjector.RegisterTypeInIl2Cpp<DiscordBehaviour>();
 
-        harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), MyPluginInfo.PLUGIN_GUID);
-        App = Instance!.AddComponent<App>();
+            ClassInjector.RegisterTypeInIl2Cpp<App>();
+            ClassInjector.RegisterTypeInIl2Cpp<WebBehaviour>();
+            ClassInjector.RegisterTypeInIl2Cpp<DiscordBehaviour>();
+
+            harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), MyPluginInfo.PLUGIN_GUID);
+            App = Instance!.AddComponent<App>();
+        }
+        catch (Exception e)
+        {
+            Log.LogError("An error occured:" + e.Message);
+        }
 
         ServerStartTime = DateTime.Now;
         

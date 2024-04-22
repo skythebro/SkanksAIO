@@ -1,3 +1,5 @@
+using Bloodstone.API;
+using ProjectM;
 using ProjectM.Network;
 using SkanksAIO.Utils;
 using Unity.Entities;
@@ -35,7 +37,8 @@ abstract class AbstractChatCommandsHandler
     /// <param name="message"></param>
     internal void Reply(string message, ServerChatMessageType type = ServerChatMessageType.System)
     {
-        Messaging.SendMessage(User, type, message);
+        var em = VWorld.Server.EntityManager;
+        ServerChatUtils.SendSystemMessageToClient(em,User,message);
     }
     
     internal User GetUser()

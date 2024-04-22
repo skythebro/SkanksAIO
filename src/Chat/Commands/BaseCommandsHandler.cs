@@ -38,7 +38,13 @@ internal class BaseCommandsHandler : AbstractChatCommandsHandler
     [ChatCommand("playercount", "gets playercount")]
     internal void PlayerCountCommand()
     {
-        var totalUserCount = UserUtils.GetOnlineUsers().Count;
+        Plugin.Logger?.LogDebug("PlayerCountCommand method called");
+
+        var onlineUsers = UserUtils.GetOnlineUsers();
+        var totalUserCount = onlineUsers.Count;
+
+        Plugin.Logger?.LogDebug($"Count of online users: {totalUserCount}");
+
         Reply($"There are {totalUserCount} players online");
     }
     
