@@ -1,5 +1,5 @@
 # ☁ SkanksAIO - Gloomrot Update
-Forked from [phillipsOG](https://github.com/phillipsOG/SkanksAIO) and updated to gloomrot.
+Forked from [phillipsOG](https://github.com/phillipsOG/SkanksAIO) and updated to gloomrot, now also updated to 1.0.
 
 A V-Rising mod that connects your server to discord and a webserver plus some extra stuff.
 Please report any issues [here](https://github.com/skythebro/SkanksAIO/issues).
