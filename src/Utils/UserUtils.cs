@@ -93,7 +93,7 @@ public class UserUtils
 
 
 // Convert NativeArray to List the expensive way
-    public static List<T> NativeArrayToList<T>(NativeArray<T> array) where T : new()
+    public static List<T> NativeArrayToList<T>(NativeArray<T> array) where T : unmanaged
     {
         List<T> list = new();
         foreach (T obj in array)
