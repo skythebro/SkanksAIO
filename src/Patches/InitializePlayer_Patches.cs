@@ -23,10 +23,10 @@ public static class InitializePlayer_Patches
     {
         try
         {
-            Plugin.Logger?.LogDebug(VWorld.Server.GetExistingSystem<ServerBootstrapSystem>().ToString());
+            Plugin.Logger?.LogDebug(VWorld.Server.GetExistingSystemManaged<ServerBootstrapSystem>().ToString());
 
-            var userIndex = VWorld.Server.GetExistingSystem<ServerBootstrapSystem>()._NetEndPointToApprovedUserIndex[netConnectionId];
-            var serverClient = VWorld.Server.GetExistingSystem<ServerBootstrapSystem>()._ApprovedUsersLookup[userIndex];
+            var userIndex = VWorld.Server.GetExistingSystemManaged<ServerBootstrapSystem>()._NetEndPointToApprovedUserIndex[netConnectionId];
+            var serverClient = VWorld.Server.GetExistingSystemManaged<ServerBootstrapSystem>()._ApprovedUsersLookup[userIndex];
 
             if (Settings.EnableVIPFunctionality.Value)
             {
@@ -98,7 +98,7 @@ public static class InitializePlayer_Patches
         }
     }
 
-    [HarmonyPatch(typeof(HandleCreateCharacterEventSystem), nameof(HandleCreateCharacterEventSystem.TryIsNameValid))]
+    [HarmonyPatch(typeof(HandleCreateCharacterEventSystem), nameof(HandleCreateCharacterEventSystem.GetIsNameValid))]
     [HarmonyPostfix]
     public static void TryIsNameValid_Patch(bool __result, HandleCreateCharacterEventSystem __instance,
         Entity userEntity,
@@ -108,7 +108,7 @@ public static class InitializePlayer_Patches
 
         Plugin.Logger?.LogDebug($"User ({characterNameString}) Picked a name successfully");
 
-        var em =  VWorld.Server.GetExistingSystem<HandleCreateCharacterEventSystem>()._BootstrapSystem.EntityManager;
+        var em =  VWorld.Server.GetExistingSystemManaged<ServerBootstrapSystem>().EntityManager;
 
         var user = em.GetComponentData<User>(userEntity);
 

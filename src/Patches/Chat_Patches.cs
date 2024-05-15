@@ -29,7 +29,7 @@ public static class Chat_Pathces
 
                 // return false; <-- Add this once the message is removed from the query.
                 // Otherwise it will spam the command output in the chat.
-
+                continue;
                 // Avii's note: You *should not* return from a foreach loop, there might be more entries left, what happens with those?
                 // It's a performance hit, if it needs to run through this entire thing again for the remaining entries.
                 // Although I don't know how this stuff works under the hood, it'd be better to find a way without a return inside the loop.
@@ -48,8 +48,6 @@ public static class Chat_Pathces
         var chatMessageEvent = em.GetComponentDataAOT<ChatMessageEvent>(entity);
         if (chatMessageEvent.MessageType == ChatMessageType.Global)
         {
-            Plugin.Logger?.LogDebug($"checking if message is global: {chatMessageEvent.MessageText}");
-
             Plugin.Logger?.LogDebug($"Just got a global message: {chatMessageEvent.MessageText}");
             var fromCharacter = em.GetComponentData<FromCharacter>(entity);
             var user = em.GetComponentData<User>(fromCharacter.User);

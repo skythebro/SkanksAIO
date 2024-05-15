@@ -30,7 +30,7 @@ class AdminCommandHandler
             return;
         }
 
-        var bootstrapSystem = VWorld.Server.GetExistingSystem<ServerBootstrapSystem>();
+        var bootstrapSystem = VWorld.Server.GetExistingSystemManaged<ServerBootstrapSystem>();
 
         bootstrapSystem.Kick(user.PlatformId, ConnectionStatusChangeReason.Kicked, false);
 

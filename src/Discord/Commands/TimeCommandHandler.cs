@@ -21,12 +21,8 @@ internal class TimeCommandHandler
             .WithColor(0x18, 0xf7, 0xf7);
 
         var em = VWorld.Server.EntityManager;
-        if (!VWorld.Server.GetExistingSystem<ServerScriptMapper>()._DayNightCycleAccessor.TryGetSingleton(out var dayNightCycle))
-        {
-            Plugin.Logger.LogWarning("Couldnt get access to DayNightCycle Singleton");
-            return;
-        }
-        
+        var dayNightCycle = VWorld.Server.GetExistingSystemManaged<ServerScriptMapper>()._ServerGameManager
+            .DayNightCycle;
         var now = dayNightCycle.GameDateTimeNow;
 
         var year = $"{now.Year:0000}";
@@ -38,10 +34,10 @@ internal class TimeCommandHandler
         var dayStartHour = dayNightCycle.DayTimeStartInSeconds / (dayNightCycle.DayDurationInSeconds / 24);
         var dayEndHour = dayStartHour + (dayNightCycle.DayTimeDurationInSeconds / (dayNightCycle.DayDurationInSeconds / 24));
 
-        bool isBmd = dayNightCycle.IsBloodMoonDay();
+        string isBmd = dayNightCycle.IsBloodMoonDay() ? "BloodMoon" : "No BloodMoon";
         string isDay = dayNightCycle.TimeOfDay == TimeOfDay.Day ? "Day" : "Night";
 
-        builder.AddField($"The current time on {Settings.MessageTitle.Value} is: ", $"**{hour}**:**{minute}** - **[{isDay}]**");
+        builder.AddField($"The current time on {Settings.MessageTitle.Value} is: ", $"**{hour}**:**{minute}** - **[{isDay}]** - **[{isBmd}]**");
 
         await ctx.RespondAsync(embed: builder.Build());
     }

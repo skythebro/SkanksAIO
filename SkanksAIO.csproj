@@ -3,12 +3,12 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <AssemblyName>SkanksAIO</AssemblyName>
-        <Description>SkanksAIO Plugin for VRising Servers</Description>
-        <Version>1.4.1</Version>
+        <AssemblyName>AIO</AssemblyName>
+        <Description>AIO Plugin for VRising Servers</Description>
+        <Version>1.5.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
-        <PackageVersion>1.4.1</PackageVersion>
+        <PackageVersion>1.5.0</PackageVersion>
         <PublicSign>false</PublicSign>
         <AssemblyOriginatorKeyFile>Dynamic.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
@@ -35,8 +35,8 @@
         </PackageReference>
         <PackageReference Include="twig.twig" Version="3.0.3" />
         <PackageReference Include="UniTask" Version="2.3.3" />
-        <PackageReference Include="VRising.Bloodstone" Version="0.1.6" />
-        <PackageReference Include="VRising.Unhollowed.Client" Version="0.6.5.57575090" />
+        <PackageReference Include="VRising.Bloodstone" Version="0.2.1" />
+        <PackageReference Include="VRising.Unhollowed.Client" Version="1.0.0.792660001" />
 		<PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.668" IncludeAssets="compile" />
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" />
         <PackageReference Include="LiteDB" Version="5.0.16" />
