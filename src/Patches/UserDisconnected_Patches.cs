@@ -32,7 +32,6 @@ public static class UserDisconnected_Patches
 
             var player = Player.GetPlayerRepository
                 .FindOne(x => x.PlatformId == user.PlatformId);
-
             if (player == null || user.CharacterName.IsEmpty)
             {
                 Plugin.Logger?.LogDebug("A user has disconnected from the Character Creation screen.");
@@ -40,11 +39,20 @@ public static class UserDisconnected_Patches
                 App.Instance.Discord.SendMessageAsync(defMessage);
                 return;
             }
-
             Plugin.Logger?.LogDebug($"{player.CharacterName} disconnected.");
             var message = JsonConfigHelper.GetOfflineMessage(player.CharacterName!);
             message = message.Replace("%user%", player.CharacterName!);
             App.Instance.Discord.SendMessageAsync(message);
+            player.IsConnected = false;
+            if (Player.GetPlayerRepository.Update(player))
+            {
+                Plugin.Logger?.LogDebug($"Updating database entry for ({player.PlatformId}) {player.CharacterName}");
+            }
+            else
+            {
+                Plugin.Logger?.LogError(
+                    $"Failed to update database entry for ({player.PlatformId}) {player.CharacterName}");
+            }
         }
     }
 }

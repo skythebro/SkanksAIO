@@ -44,7 +44,6 @@ public static class InitializePlayer_Patches
             var userEntity = serverClient.UserEntity;
 
             var user = VWorld.Server.EntityManager.GetComponentData<User>(userEntity);
-
             var player = Player.GetPlayerRepository
                 .FindOne(x => x.PlatformId == user.PlatformId);
             if (player == null)
@@ -61,7 +60,7 @@ public static class InitializePlayer_Patches
                     return;
                 }
 
-                player = new Player { PlatformId = user.PlatformId, CharacterName = user.CharacterName.ToString() };
+                player = new Player { PlatformId = user.PlatformId, CharacterName = user.CharacterName.ToString(), UserEntity = userEntity, CharEntity = user.LocalCharacter._Entity, IsConnected = true};
                 Player.GetPlayerRepository.Insert(player);
 
                 Plugin.Logger?.LogDebug(
@@ -75,7 +74,18 @@ public static class InitializePlayer_Patches
 
                 return;
             }
-
+            player.UserEntity = userEntity;
+            player.CharEntity = user.LocalCharacter._Entity;
+            player.IsConnected = true;
+            if (Player.GetPlayerRepository.Update(player))
+            {
+                Plugin.Logger?.LogDebug($"Updating database entry for ({player.PlatformId}) {player.CharacterName}");
+            }
+            else
+            {
+                Plugin.Logger?.LogError(
+                    $"Failed to update database entry for ({player.PlatformId}) {player.CharacterName}");
+            }
             // An existing player has returned.
             Plugin.Logger?.LogDebug($"{player.CharacterName} connected");
             if (Settings.ShowUserConnectedInDc.Value)
@@ -117,7 +127,7 @@ public static class InitializePlayer_Patches
 
         if (player == null)
         {
-            player = new Player { PlatformId = user.PlatformId, CharacterName = characterNameString };
+            player = new Player { PlatformId = user.PlatformId, CharacterName = characterNameString, UserEntity = userEntity, CharEntity = user.LocalCharacter._Entity, IsConnected = true };
             Player.GetPlayerRepository.Insert(player);
 
             Plugin.Logger?.LogDebug($"Creating new database entry for ({player.PlatformId}) {player.CharacterName}");
@@ -133,6 +143,9 @@ public static class InitializePlayer_Patches
         }
 
         player.CharacterName = characterNameString;
+        player.UserEntity = userEntity;
+        player.CharEntity = user.LocalCharacter._Entity;
+        player.IsConnected = true;
         player.Kills = 0;
         player.Deaths = 0;
 

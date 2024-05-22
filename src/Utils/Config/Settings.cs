@@ -39,6 +39,8 @@ namespace SkanksAIO.Utils.Config
         internal static ConfigEntry<string> MessageTitle { get; private set; }
         internal static ConfigEntry<bool> LeaderboardAsList { get; private set; }
         internal static ConfigEntry<string> ChatCommandPrefix { get; private set; }
+        
+        internal static ConfigEntry<string> GlobalChatLabel { get; private set; }
 
         #endregion
 
@@ -67,6 +69,14 @@ namespace SkanksAIO.Utils.Config
         public static Random Random;
 
         internal static int LastEntry;
+
+        #endregion
+
+        #region OfflineRaidingConfigA   
+
+        public static ConfigEntry<bool> DisableOfflineRaiding;
+        public static ConfigEntry<bool> FactorAllies;
+        public static ConfigEntry<int> MaxAllyCacheAge;
 
         #endregion
 
@@ -99,10 +109,11 @@ namespace SkanksAIO.Utils.Config
             // Leaderboard List View Setting
             LeaderboardAsList = config.Bind("Discord", "ShowLeaderboardAsList", false,
                 "If true, the leaderboard will be shown as a table instead of a grid.");
+            
+            GlobalChatLabel = config.Bind("Chat", "GlobalChatLabel", "GLOBAL", "Label for global chat messages that get sent to discord.");
 
             #endregion
-
-
+            
             #region WebserverConfig
 
             // Webserver Settings
@@ -173,6 +184,17 @@ namespace SkanksAIO.Utils.Config
                 App.Instance.Restart();
             }
             
+            #endregion
+
+            #region OfflineRaidingConfig
+
+            DisableOfflineRaiding = Config.Bind("Config", "DisableOfflineRaiding", false, "Enable/disable OfflineRaiding protection.");
+            FactorAllies = Config.Bind("Config", "FactorAllies", true, "Include the besieged player allies online status before blocking siege.");
+            MaxAllyCacheAge = Config.Bind("Config", "MaxAllyCacheAge", 300, "Max age of the besieged player allies cache in seconds.\n" +
+                                                                               "If the cache age is older than specified, the cache will be renewed.\n" +
+                                                                               "Don't set this too short as allies gathering process can slightly impact your server performance.\n" +
+                                                                               "This cache is only for allies gathering, their online/offline status is updated instantly.");
+
             #endregion
             
         }

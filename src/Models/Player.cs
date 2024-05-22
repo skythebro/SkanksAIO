@@ -1,5 +1,6 @@
 using System;
 using LiteDB;
+using Unity.Entities;
 
 namespace SkanksAIO.Models
 {
@@ -23,6 +24,12 @@ namespace SkanksAIO.Models
         public ObjectId? Id { get; set; }
         public ulong PlatformId { get; set; }
         public string? CharacterName { get; set; }
+        
+        public bool IsConnected { get; set; }
+        
+        public Entity UserEntity { get; set; }
+        
+        public Entity CharEntity { get; set; }
         public int Kills { get; set; } = 0;
         public int Deaths { get; set; } = 0;
         public int ELO { get; set; } = 1000;
@@ -46,7 +53,7 @@ namespace SkanksAIO.Models
         public Player() { }
 
         [BsonCtor]
-        public Player(ObjectId _id, ulong PlatformId, string? CharacterName, int Kills, int Deaths, int ELO)
+        public Player(ObjectId _id, ulong PlatformId, string? CharacterName,bool isConnected,Entity userEntity, Entity charEntity, int Kills, int Deaths, int ELO)
         {
             this.Id = _id;
             this.PlatformId = PlatformId;
@@ -54,6 +61,9 @@ namespace SkanksAIO.Models
             this.Kills = Kills;
             this.Deaths = Deaths;
             this.ELO = ELO;
+            this.IsConnected = isConnected;
+            this.UserEntity = userEntity;
+            this.CharEntity = charEntity;
         }
     }
 }

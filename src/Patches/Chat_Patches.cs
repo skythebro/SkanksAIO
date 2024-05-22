@@ -7,6 +7,8 @@ using ProjectM;
 using ProjectM.Network;
 using SkanksAIO;
 using SkanksAIO.Utils;
+using SkanksAIO.Utils.Config;
+using Stunlock.Network.Steam.Wrapper;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -48,21 +50,36 @@ public static class Chat_Pathces
         var chatMessageEvent = em.GetComponentDataAOT<ChatMessageEvent>(entity);
         if (chatMessageEvent.MessageType == ChatMessageType.Global)
         {
-            Plugin.Logger?.LogDebug($"Just got a global message: {chatMessageEvent.MessageText}");
+            
+            string messageText = chatMessageEvent.MessageText.ToString() ?? string.Empty;
+
+            
+            // Check if the message starts with a dot
+            if (messageText.StartsWith(".") || messageText.StartsWith(Settings.ChatCommandPrefix.ToString()))
+            {
+                // Do nothing user is trying to run a command
+                return;
+            }
+            
+            // Remove all @ symbols from the message
+            var sanitizedMessage = messageText.Replace("@", "");
+
+            
+            Plugin.Logger?.LogDebug($"Just got a global message: {messageText}");
             var fromCharacter = em.GetComponentData<FromCharacter>(entity);
             var user = em.GetComponentData<User>(fromCharacter.User);
 
             if (isAdmin)
             {
-                Plugin.Logger?.LogDebug($"[Chat][Admin] {user.CharacterName}: {chatMessageEvent.MessageText}");
+                Plugin.Logger?.LogDebug($"[{Settings.GlobalChatLabel}][Admin] {user.CharacterName}: {sanitizedMessage}");
                 var _ = App.Instance.Discord.SendMessageAsync(
-                    $"[GLOBAL][Admin]{0}: {1} {user.CharacterName}: {chatMessageEvent.MessageText}");
+                    $"[{Settings.GlobalChatLabel}][Admin]{user.CharacterName}: {sanitizedMessage}");
             }
             else
             {
-                Plugin.Logger?.LogDebug($"[Chat] {user.CharacterName}: {chatMessageEvent.MessageText}");
+                Plugin.Logger?.LogDebug($"[{Settings.GlobalChatLabel}] {user.CharacterName}: {sanitizedMessage}");
                 var _ = App.Instance.Discord.SendMessageAsync(
-                    $"[GLOBAL] {user.CharacterName}: {chatMessageEvent.MessageText}");
+                    $"[{Settings.GlobalChatLabel}] {user.CharacterName}: {sanitizedMessage}");
             }
         }
         else

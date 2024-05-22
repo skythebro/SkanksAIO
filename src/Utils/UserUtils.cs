@@ -5,11 +5,11 @@ using Bloodstone.API;
 using Il2CppInterop.Runtime;
 using ProjectM;
 using ProjectM.Network;
+using ProjectM.Scripting;
 using ProjectM.Terrain;
 using SkanksAIO.Models;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Entities.UniversalDelegates;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -19,6 +19,40 @@ public class UserUtils
 {
     private static EntityManager _em = VWorld.Server.EntityManager;
 
+    public static ServerGameManager SGM = default;
+    
+    public static bool GetServerGameManager(out ServerGameManager sgm)
+    {
+        sgm = VWorld.Server.GetExistingSystemManaged<ServerScriptMapper>()._ServerGameManager;
+        return true;
+    }
+    public static int GetAllies(Entity CharacterEntity, out Dictionary<Entity, Entity> Group)
+    {
+        Group = new();
+
+        var em = VWorld.Server.EntityManager;
+        
+        Team characterTeam = em.GetComponentData<Team>(CharacterEntity);
+        int alliedUsersCount = 0;
+        
+        // getting and storing allied user character pairs
+        foreach (var userEntity in em.CreateEntityQuery(ComponentType.ReadOnly<User>()).ToEntityArray(Allocator.Temp))
+        {
+            em.TryGetComponentData<User>(userEntity,out var user);
+            Entity characterEntity = user.LocalCharacter._Entity;
+            em.TryGetComponentData<Team>(characterEntity,out var otherPlayerCharacterTeam);
+            if (CharacterEntity.Equals(characterEntity)) continue;
+            
+            if (Team.IsAllies(characterTeam,otherPlayerCharacterTeam))
+            {
+                alliedUsersCount++;
+                Group[userEntity] = characterEntity;
+            }
+        }
+        if (alliedUsersCount < 1) return 0;
+
+        return alliedUsersCount;
+    }
     public static bool TryGetUserByPlatformId(ulong platformId, out User? user)
     {
         var userQuery = _em.CreateEntityQuery(ComponentType.ReadOnly(Il2CppType.Of<User>()));
