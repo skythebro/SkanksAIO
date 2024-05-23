@@ -71,15 +71,15 @@ public static class Chat_Pathces
 
             if (isAdmin)
             {
-                Plugin.Logger?.LogDebug($"[{Settings.GlobalChatLabel}][Admin] {user.CharacterName}: {sanitizedMessage}");
+                Plugin.Logger?.LogDebug($"[{Settings.GlobalChatLabel.Value}][Admin] {user.CharacterName}: {sanitizedMessage}");
                 var _ = App.Instance.Discord.SendMessageAsync(
-                    $"[{Settings.GlobalChatLabel}][Admin]{user.CharacterName}: {sanitizedMessage}");
+                    $"[{Settings.GlobalChatLabel.Value}][Admin]{user.CharacterName}: {sanitizedMessage}");
             }
             else
             {
-                Plugin.Logger?.LogDebug($"[{Settings.GlobalChatLabel}] {user.CharacterName}: {sanitizedMessage}");
+                Plugin.Logger?.LogDebug($"[{Settings.GlobalChatLabel.Value}] {user.CharacterName}: {sanitizedMessage}");
                 var _ = App.Instance.Discord.SendMessageAsync(
-                    $"[{Settings.GlobalChatLabel}] {user.CharacterName}: {sanitizedMessage}");
+                    $"[{Settings.GlobalChatLabel.Value}] {user.CharacterName}: {sanitizedMessage}");
             }
         }
         else
