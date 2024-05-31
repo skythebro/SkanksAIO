@@ -31,6 +31,17 @@ If you get access denied error 5 for the webserver make sure you run the server 
 Make sure <ins>_**EnableInteractiveMap**_</ins> is set to `true` in your server's `SkanksAIO.cfg` file. You can access the map by going to `http://yourip:port/map` in your browser.
 ![img.png](https://imgur.com/VLF10mW.png)
 
+# DO NOT SKIP THIS STEP
+
+Then make sure you don't see any errors in the console if you get the error `[Error : AIO] An error occured:System.Net.HttpListenerException (5): Access is denied`
+This means that windows is blocking the connection and you'll need to run the following command in an elevated command prompt to allow the connection.
+For linux users or others You'll have to look up a similar command for your OS.
+
+For windows: (computername is your computer name and username is your windows username, also make sure to use the same port you set in the config file in this example the port is `8080`)
+`netsh http add urlacl url=http://+:8080/ user=<COMPUTERNAMEHERE>\<USERNAME>`
+
+
+
 #### features
 - [x] Player tracking
 - [x] Custom marker placement using admin commands

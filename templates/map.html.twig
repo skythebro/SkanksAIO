@@ -84,9 +84,9 @@
     <div id="subheader">
         <h2>Interactive map</h2>
     </div>
-    <!-- uncomment for coordinate info (debug) you also need to uncomment the code in the script section
+    <!-- uncomment for coordinate info (debug) you also need to uncomment the code in the script section -->
       <div id="coordinates-info" style="position: absolute; top: 10px; left: 10px; background-color: white; padding: 5px;"></div>
-      -->
+
 </div>
 <div id="map-container" style="width: 99.9%;">
     <div id="popup" class="ol-popup">
@@ -211,13 +211,47 @@
 
 
     // DO NOT EDIT ANYTHING BELOW THIS LINE
-    const X_scaling_factor_web = 10880 / 2720
-    const Y_scaling_factor_web = (5440 - (-5440)) / (480 - (-2240))
-    const X_offset = 1
-    const Y_offset = 5440
+    const inGamePoints = [
+        [-2018.579, -1867.3538],
+        [-1175.4547, 299.77496],
+        [-1848.4547, 384.77496],
+        [-2459.45, -1064.1505],
+        [-1252.9863, -1360.7368]
+    ];
+
+    const onlinePoints = [
+        [-921.35, -1522.96],
+        [329.30, 1696.11],
+        [-667.34, 1822.45],
+        [-1574.62, -329.53],
+        [214.99, -771.30]
+    ];
+
+    const inGameOrigin = [2098, 1225];
+    const onlineMapOrigin = [-1400, -843];
+
+    // Adjust points based on origins
+    const adjustedInGamePoints = inGamePoints.map(point => [
+        point[0] - inGameOrigin[0],
+        point[1] - inGameOrigin[1]
+    ]);
+
+    const adjustedOnlinePoints = onlinePoints.map(point => [
+        point[0] - onlineMapOrigin[0],
+        point[1] - onlineMapOrigin[1]
+    ]);
+
+    // Calculate scaling factors
+    const scaleX = (adjustedOnlinePoints[1][0] - adjustedOnlinePoints[0][0]) / (adjustedInGamePoints[1][0] - adjustedInGamePoints[0][0]);
+    const scaleY = (adjustedOnlinePoints[1][1] - adjustedOnlinePoints[0][1]) / (adjustedInGamePoints[1][1] - adjustedInGamePoints[0][1]);
+
+    // Calculate offsets
+    const offsetX = adjustedOnlinePoints[0][0] - scaleX * adjustedInGamePoints[0][0];
+    const offsetY = adjustedOnlinePoints[0][1] - scaleY * adjustedInGamePoints[0][1];
+
     const mapMinZoom = 0;
     const mapMaxZoom = 5;
-    let Map = null;
+    let myMap = null;
     let playerVectorLayer = null;
     let markerVectorLayer = null;
     let playerCounter = 0;
@@ -228,6 +262,29 @@
     let visibilityCustomMarkers = true;
     let Noplayers = false;
     let selectedFeature = null;
+
+    function transform(x, y) {
+        // Adjust coordinates based on in-game origin before transformation
+        const adjustedX = x - inGameOrigin[0];
+        const adjustedY = y - inGameOrigin[1];
+
+        // Apply scaling and offset
+        const X = scaleX * adjustedX + offsetX + onlineMapOrigin[0];
+        const Y = scaleY * adjustedY + offsetY + onlineMapOrigin[1];
+
+        return [X, Y];
+    }
+
+    function convertCoordinates(playerX, playerY) {
+        const [X_web, Y_web] = transform(playerX, playerY);
+        return { X_web, Y_web };
+    }
+
+    function convertCoordinatesArray(playerX, playerY) {
+        return transform(playerX, playerY);
+    }
+
+
 
     function getPlayerPositions() {
         return fetch('/map-data-player')
@@ -346,6 +403,8 @@
     let markerVectorSource = null;
     let markerClusterStrategy = null;
 
+
+
     function updateCustomMarkers() {
         getCustomMarkers().then(markerData => {
 
@@ -357,8 +416,7 @@
             let markerFeatures = [];
 
             mapMarkerData.forEach(function (data) {
-                const X_web = ((data.lon - (-2720)) * X_scaling_factor_web) - X_offset;
-                const Y_web = ((data.lat - (-2240)) * Y_scaling_factor_web) - Y_offset;
+                const { X_web, Y_web } = convertCoordinates(data.lon, data.lat);
                 const feature = new ol.Feature({
                     geometry: new ol.geom.Point(([X_web, Y_web])),
                     name: data.label,
@@ -381,10 +439,10 @@
             });
 
             if (markerCounter !== 0) {
-                Map.removeLayer(markerVectorLayer);
+                myMap.removeLayer(markerVectorLayer);
                 if (customMarkerControl !== null) {
                     visibilityCustomMarkers = customMarkerControl.layer.getVisible()
-                    Map.removeControl(customMarkerControl);
+                    myMap.removeControl(customMarkerControl);
                 }
             }
 
@@ -452,8 +510,44 @@
             }
 
 
-            Map.addControl(customMarkerControl);
-            Map.addLayer(markerVectorLayer);
+            myMap.addControl(customMarkerControl);
+            myMap.addLayer(markerVectorLayer);
+
+
+
+            //testing
+
+
+            const markerSource = new ol.source.Vector();
+            const markerLayer = new ol.layer.Vector({
+                source: markerSource
+            });
+
+            // Define a style for the marker
+            const markerStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 6,
+                    fill: new ol.style.Fill({ color: 'red' }),
+                    stroke: new ol.style.Stroke({
+                        color: 'white',
+                        width: 2
+                    })
+                })
+            });
+
+            // Create a marker feature at the in-game origin point
+            const markerFeature = new ol.Feature({
+                geometry: new ol.geom.Point(inGameOrigin)
+            });
+            markerFeature.setStyle(markerStyle);
+
+            // Add the marker feature to the marker layer
+            markerSource.addFeature(markerFeature);
+
+            // Add the marker layer to the map
+            myMap.addLayer(markerLayer);
+
+            //endtesting
 
 
         });
@@ -471,6 +565,7 @@
                 {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Farbane Woods lon: 5087, lat: -2662
                 {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Cursed Forest lon: 7886, lat: 3931
                 {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Hallowed Mountains lon: 9051, lat: 491
+                {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Ruins of Mortium
                 {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Gloomrot South lon: 4865, lat: 3649
                 {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Gloomrot North lon: 3054, lat: 3709
                 {lon: 0, lat: 0, label: '', PlayerCount: 0}, //Starter Cave
@@ -480,8 +575,9 @@
                 TotalPlayerCounter += territoryData[i].PlayerCount;
                 regionData[i].label = territoryData[i].Territory;
                 regionData[i].PlayerCount = territoryData[i].PlayerCount;
-                regionData[i].lon = ((territoryData[i].X - (-2720)) * X_scaling_factor_web) - X_offset;
-                regionData[i].lat = ((territoryData[i].Y - (-2240)) * Y_scaling_factor_web) - Y_offset;
+                const { X_web, Y_web } = convertCoordinates(territoryData[i].X, territoryData[i].Y);
+                regionData[i].lon = X_web;
+                regionData[i].lat = Y_web;
                 //console.log("regionName:" + regionData[i].label + " PosX: " + regionData[i].lon + " PosY: " + regionData[i].lat)
 
             }
@@ -496,6 +592,24 @@
                 });
                 features.push(feature);
             });
+
+            let testCornerData = [
+                {lon: -2200, lat: -2312, label: 'bottom left', PlayerCount: 0}, // bottom left corner coordinates of online map
+                {lon: 2312, lat: 2200, label: 'top right', PlayerCount: 0}, // top right corner coordinates of online map
+                {lon: 2312, lat: -2312, label: 'bottom right', PlayerCount: 0}, // bottom right corner coordinates of online map
+                {lon: -2200, lat: 2200, label: 'top left', PlayerCount: 0}, // top left corner coordinates of online map
+                {lon: -2200, lat: 2200, label: 'top left', PlayerCount: 0}, // top left corner coordinates of online map
+                {lon: 0, lat: 0, label: 'center', PlayerCount: 0}
+            ];
+
+            testCornerData.forEach(function (data) {
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(([parseFloat(data.lon), parseFloat(data.lat)])),
+                    name: data.label,
+                });
+                features.push(feature);
+            });
+
             const vectorSource = new ol.source.Vector({
                 features: features
             });
@@ -568,8 +682,8 @@
                 }
             });
             const customControl = new ShowHideControl(vectorLayer, "TR", "Toggle Regions");
-            Map.addControl(customControl);
-            Map.addLayer(vectorLayer);
+            myMap.addControl(customControl);
+            myMap.addLayer(vectorLayer);
 
             const clickableSimpleRegions = [
                 {bottomLeft: [0, 0], topRight: [0, 0], label: '', territoryId: 1},
@@ -644,10 +758,8 @@
             clickableComplexRegions.forEach((region) => {
                 for (let i = 0; i < territoryData.length; i++) {
                     if (region.label === territoryData[i].Territory && territoryData[i].Territory === "Gloomrot North") {
-                        let BottomLeftX = (((territoryData[i].BX - (-2720)) * X_scaling_factor_web) - X_offset);
-                        let BottomLeftY = (((territoryData[i].BY - (-2240)) * Y_scaling_factor_web) - Y_offset);
-                        let TopRightX = (((territoryData[i].TX - (-2720)) * X_scaling_factor_web) - X_offset);
-                        let TopRightY = (((territoryData[i].TY - (-2240)) * Y_scaling_factor_web) - Y_offset);
+                        let { BottomLeftX, BottomLeftY } = convertCoordinates(territoryData[i].BX,territoryData[i].BY)
+                        let { TopRightX, TopRightY } = convertCoordinates(territoryData[i].TX,territoryData[i].TY)
                         let MiddleY = (BottomLeftY + TopRightY) / 2;
                         let TopLeftX = BottomLeftX;
                         let MiddleRightX = TopRightX;
@@ -668,10 +780,9 @@
                         region.points[6] = BottomLeft;// Bottom left
                     }
                     if (region.label === territoryData[i].Territory && territoryData[i].Territory === "Gloomrot South") {
-                        let BottomLeftX = (((territoryData[i].BX - (-2720)) * X_scaling_factor_web) - X_offset);
-                        let BottomLeftY = (((territoryData[i].BY - (-2240)) * Y_scaling_factor_web) - Y_offset);
-                        let TopRightX = (((territoryData[i].TX - (-2720)) * X_scaling_factor_web) - X_offset);
-                        let TopRightY = (((territoryData[i].TY - (-2240)) * Y_scaling_factor_web) - Y_offset);
+
+                        let { BottomLeftX, BottomLeftY } = convertCoordinates(territoryData[i].BX,territoryData[i].BY)
+                        let { TopRightX, TopRightY } = convertCoordinates(territoryData[i].TX,territoryData[i].TY)
                         let MiddleY = (BottomLeftY + TopRightY) / 2;
                         let TopLeftX = BottomLeftX;
                         let MiddleLeftX = BottomLeftX;
@@ -695,17 +806,19 @@
                 }
             });
 
+
+
             // setting up correct shape for simple regions
             for (let i = 0; i < clickableSimpleRegions.length; i++) {
                 if (i === 5) {
                     clickableSimpleRegions[i].label = territoryData[i + 2].Territory;
-                    clickableSimpleRegions[i].bottomLeft = [(((territoryData[i + 2].BX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i + 2].BY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
-                    clickableSimpleRegions[i].topRight = [(((territoryData[i + 2].TX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i + 2].TY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
+                    clickableSimpleRegions[i].bottomLeft = convertCoordinates(territoryData[i + 2].BX,territoryData[i + 2].BY);
+                    clickableSimpleRegions[i].topRight = convertCoordinates(territoryData[i + 2].TX,territoryData[i + 2].TY);
                     continue;
                 }
                 clickableSimpleRegions[i].label = territoryData[i].Territory;
-                clickableSimpleRegions[i].bottomLeft = [(((territoryData[i].BX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i].BY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
-                clickableSimpleRegions[i].topRight = [(((territoryData[i].TX - (-2720)) * X_scaling_factor_web) - X_offset), (((territoryData[i].TY - (-2240)) * Y_scaling_factor_web) - Y_offset)];
+                clickableSimpleRegions[i].bottomLeft = convertCoordinates(territoryData[i].BX,territoryData[i].BY);
+                clickableSimpleRegions[i].topRight = convertCoordinates(territoryData[i].TX,territoryData[i].TY);
             }
 
             clickableSimpleRegions.forEach(function (data) { //simple fix for overlapping regions
@@ -738,7 +851,7 @@
             clickableComplexRegions.sort((a, b) => b.territoryId - a.territoryId);
             const polygonStyle = new ol.style.Style({
                 fill: new ol.style.Fill({
-                    color: 'rgba(255, 255, 255, 0)', // Transparent fill color
+                    color: 'rgba(255, 255, 255, 0.1)', // Transparent fill color //todo:
                 }),
                 stroke: new ol.style.Stroke({
                     color: 'rgba(0, 0, 0, 0)', // Transparent stroke color
@@ -788,7 +901,7 @@
                 source: regionVectorSource
             });
 
-            Map.addLayer(regionVectorLayer);
+            myMap.addLayer(regionVectorLayer);
 
             const customSelectStyle = new ol.style.Style({
                 fill: new ol.style.Fill({
@@ -809,7 +922,7 @@
             });
 
             // Add the select interaction to the map
-            Map.addInteraction(select);
+            myMap.addInteraction(select);
 
 
             const popup = document.getElementById('popup');
@@ -854,7 +967,7 @@
                         const center = ol.extent.getCenter(geometry.getExtent());
 
                         // Convert the center coordinates to pixel coordinates
-                        const pixel = Map.getPixelFromCoordinate(center);
+                        const pixel = myMap.getPixelFromCoordinate(center);
 
                         // Position the popup at the center of the feature
                         popup.style.display = 'block';
@@ -910,10 +1023,11 @@
                 let playerX = position.X;
                 let playerY = position.Y;
 
-                const X_web = ((playerX - (-2720)) * X_scaling_factor_web) - X_offset;
-                const Y_web = ((playerY - (-2240)) * Y_scaling_factor_web) - Y_offset;
+                console.log("name:" + playerName + " PosX: " + playerX + " PosY: " + playerY)
 
-                if (X_web !== 10879 && Y_web !== 3520) { //0 0 ingame
+                const { X_web, Y_web } = convertCoordinates(playerX, playerY);
+// todo: figure this out
+                if (X_web !== 9023 && Y_web !== 2919) { //0 0 ingame
 
 
                     const feature = new ol.Feature({
@@ -945,10 +1059,10 @@
             });
 
             if (playerCounter !== 0) {
-                Map.removeLayer(playerVectorLayer);
+                myMap.removeLayer(playerVectorLayer);
                 if (customPlayerControl !== null) {
                     visibilityPlayers = customPlayerControl.layer.getVisible()
-                    Map.removeControl(customPlayerControl);
+                    myMap.removeControl(customPlayerControl);
                 }
             }
 
@@ -972,44 +1086,54 @@
             }
 
 
-            Map.addControl(customPlayerControl);
-            Map.addLayer(playerVectorLayer);
+            myMap.addControl(customPlayerControl);
+            myMap.addLayer(playerVectorLayer);
 
         });
     }
 
     function init() {
-        const viewExtent = [-5440 * 2, -5440 * 2, 5440 * 4, 5440 * 2];
-        const normalExtent = [1, -5440, 5440 * 2, 5440];
+        const viewExtent = [-6080, -6080, 6080, 6080];
+        const normalExtent = [-3040, -3040, 3040, 3040];
+
+        const minX = viewExtent[0];
+        const minY = viewExtent[1];
+        const maxX = viewExtent[2];
+        const maxY = viewExtent[3];
+
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
 
         const tileGrid = new ol.tilegrid.TileGrid({
             extent: normalExtent,
             tileSize: 256,
-            resolutions: [...Array(mapMaxZoom + 1)].map((_, z) => Math.pow(2, mapMaxZoom - z)),
-            origin: [1, -5440], // Set the origin to the bottom-left corner
+            resolutions: [23.75, 11.875, 5.9375, 2.96875, 1.484375, 0.7421875],
+            origin: [-2200, 2200],
         });
 
         const myView = new ol.View({
             projection: ol.proj.get('EPSG:3857'),
-            center: ([0, 0]), // Set your initial center here (lon, lat)
+            center: ([centerX, centerY]), // Set your initial center here (lon, lat)
             zoom: 0,
             extent: viewExtent,
         });
 
-        Map = new ol.Map({
+        myMap = new ol.Map({
             target: 'map-container',
             view: myView,
         });
 
         const layer = new ol.layer.Tile({
             source: new ol.source.XYZ({
+                center: ol.proj.fromLonLat([0, 0]),
+                zoom: mapMinZoom,
                 maxZoom: mapMaxZoom,
                 minZoom: mapMinZoom,
                 tileGrid: tileGrid,
                 tileUrlFunction: function (tileCoord) {
                     const z = tileCoord[0];
                     const x = tileCoord[1];
-                    const y = -tileCoord[2] - 1; // Invert y-coordinate
+                    const y = tileCoord[2];
                     return 'https://skythebro.github.io/SkanksAIO/templates/VrisingMapTiles/' + z + '/' + x + '/' + y + '.png';
                 },
             })
@@ -1056,9 +1180,9 @@
             console.error('Error:', error);
         });
 
-        Map.addLayer(layer)
+        myMap.addLayer(layer)
 
-        Map.on('pointerdrag', () => {
+        myMap.on('pointerdrag', () => {
             if (selectedFeature) {
                 var popup = document.getElementById('popup');
                 popup.style.display = 'none';
@@ -1067,16 +1191,16 @@
         });
 
         //debug so i can see coords
-        // const coordinatesInfo = document.getElementById('coordinates-info');
-        // Map.on('click', function (event) {
-        //     const coordinate = event.coordinate;
-        //     const [xMap, yMap] = coordinate;
-        //     const [xGame, yGame] = [((xMap + X_offset) / X_scaling_factor_web) + (-2720), ((yMap + Y_offset) / Y_scaling_factor_web) + (-2240)];
-        //
-        //     coordinatesInfo.innerHTML = `Map coords: X: ${xMap.toFixed(2)}, Y: ${yMap.toFixed(2)}<br>Game coords: xGame: ${xGame.toFixed(2)}, yGame: ${yGame.toFixed(2)}`;
-        // });
+        const coordinatesInfo = document.getElementById('coordinates-info');
+        myMap.on('click', function (event) {
+            const coordinate = event.coordinate;
+            const [xMap, yMap] = coordinate;
+            const [ xGame, yGame ] = convertCoordinatesArray(xMap, yMap);
 
-        Map.on('click', (e) => {
+            coordinatesInfo.innerHTML = `Map coords: X: ${xMap}, Y: ${yMap}<br>Game coords: xGame: ${xGame.toFixed(2)}, yGame: ${yGame.toFixed(2)}`;
+        });
+
+        myMap.on('click', (e) => {
             markerVectorLayer.getFeatures(e.pixel).then((clickedFeatures) => {
                 if (clickedFeatures.length) {
                     // Get clustered Coordinates
@@ -1085,14 +1209,14 @@
                         const extent = ol.extent.boundingExtent(
                             features.map((r) => r.getGeometry().getCoordinates())
                         );
-                        Map.getView().fit(extent, {duration: 1000, padding: [50, 50, 50, 50]});
+                        myMap.getView().fit(extent, {duration: 1000, padding: [50, 50, 50, 50]});
                     }
                 }
             });
         });
 
         window.addEventListener("resize", function () {
-            Map.updateSize();
+            myMap.updateSize();
         });
     }
 
