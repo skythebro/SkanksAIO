@@ -113,14 +113,16 @@ class DiscordCommandLib
         MessageReference? messageReference = null, MessageComponent? components = null, ISticker[]? stickers = null,
         Embed[]? embeds = null, MessageFlags flags = MessageFlags.None, bool isAnnouncement = false)
     {
-        switch (broadcastChannel)
+        if (broadcastChannel == null && AnnouncementChannel == null)
         {
-            case null when AnnouncementChannel == null:
-                Plugin.Logger?.LogError("[DiscordLib] Broadcast and Announcement channels not set, Unable to send messages.");
-                return;
-            case null:
-                Plugin.Logger?.LogError("[DiscordLib] Broadcast channel not set, Unable to send messages.");
-                return;
+            Plugin.Logger?.LogError("[DiscordLib] Broadcast and Announcement channels not set, Unable to send messages.");
+            return;
+        }
+        
+        if (broadcastChannel == null)
+        {
+            Plugin.Logger?.LogError("[DiscordLib] Broadcast channel not set, Unable to send messages.");
+            return;
         }
 
         if (AnnouncementChannel == null)
@@ -128,15 +130,30 @@ class DiscordCommandLib
             Plugin.Logger?.LogDebug("[DiscordLib] Announcement channel not set, sending messages via broadcastChannel.");
         }
 
-        if (isAnnouncement)
+        try
         {
-            await AnnouncementChannel!.SendMessageAsync(text, isTTS, embed, options, allowedMentions, messageReference,
-                components, stickers, embeds, flags);
+            if (isAnnouncement)
+            {
+                await AnnouncementChannel!.SendMessageAsync(text, isTTS, embed, options, allowedMentions, messageReference,
+                    components, stickers, embeds, flags);
+            }
+            else
+            {
+                await broadcastChannel!.SendMessageAsync(text, isTTS, embed, options, allowedMentions, messageReference,
+                    components, stickers, embeds, flags);
+            }
         }
-        else
+        catch (Exception e)
         {
-            await broadcastChannel!.SendMessageAsync(text, isTTS, embed, options, allowedMentions, messageReference,
-                components, stickers, embeds, flags);
+            Plugin.Logger?.LogError($"[DiscordLib] Error when sending message: {e}");
+            if (isAnnouncement)
+            {
+                Plugin.Logger?.LogError($"[DiscordLib] Failed to send announcement to channel ID: {Settings.AnnounceChannelId!.Value}");
+            }
+            else
+            {
+                Plugin.Logger?.LogError($"[DiscordLib] Failed to send message to broadcast channel ID: {Settings.ChannelId!.Value}");
+            }
         }
 
         

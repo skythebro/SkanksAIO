@@ -390,37 +390,20 @@ internal class WebServer
         // register all controllers
         foreach (var controller in controllers)
         {
-            if (Utils.Config.Settings.EnableInteractiveMap.Value)
+            if (!Utils.Config.Settings.EnableInteractiveMap.Value && controller.Name == "MapController")
             {
-                if (controller.Name == "MapController")
-                {
-                    continue;
-                }
-                var methods = controller.GetMethods();
-                foreach (var method in methods)
-                {
-                    var attr2 = method.GetCustomAttribute<RouteAttribute>();
-                    if (attr2 != null)
-                    {
-                        foreach (var m in attr2.Methods)
-                        {
-                            router.Insert(m, attr2.Path, method);
-                        }
-                    }
-                }
+                continue;
             }
-            else
+
+            var methods = controller.GetMethods();
+            foreach (var method in methods)
             {
-                var methods = controller.GetMethods();
-                foreach (var method in methods)
+                var attr2 = method.GetCustomAttribute<RouteAttribute>();
+                if (attr2 != null)
                 {
-                    var attr2 = method.GetCustomAttribute<RouteAttribute>();
-                    if (attr2 != null)
+                    foreach (var m in attr2.Methods)
                     {
-                        foreach (var m in attr2.Methods)
-                        {
-                            router.Insert(m, attr2.Path, method);
-                        }
+                        router.Insert(m, attr2.Path, method);
                     }
                 }
             }
