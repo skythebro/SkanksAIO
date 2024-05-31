@@ -101,7 +101,7 @@ public class Plugin : BasePlugin, IRunOnInitialized
         }
         catch (Exception e)
         {
-            Log.LogError("An error occured:" + e.Message);
+            Log.LogError("An error occured:" + e);
         }
 
         ServerStartTime = DateTime.Now;
@@ -109,16 +109,18 @@ public class Plugin : BasePlugin, IRunOnInitialized
         try
         {
             //var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            
+            string dllName = Assembly.GetExecutingAssembly().GetName().Name!;
             var pluginDirectory = Path.GetFullPath(Paths.PluginPath);
-            var configDirectory = Path.Combine(pluginDirectory, "SkanksAIO", "config");
+            var configDirectory = Path.Combine(pluginDirectory, dllName, "config");
 
-            var dbPathFull = Path.Combine(configDirectory, "SkanksAIO.db");
-            Log.LogDebug($"dbPathFull {dbPathFull}");
+           
             if (!Directory.Exists(configDirectory))
             {
                 Directory.CreateDirectory(configDirectory);
             }
+            
+            var dbPathFull = Path.Combine(configDirectory, $"{dllName}.db");
+            Log.LogDebug($"dbPathFull {dbPathFull}");
             
             Database = new LiteDatabase(dbPathFull);
         }
