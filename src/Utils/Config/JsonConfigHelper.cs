@@ -19,8 +19,7 @@ public static class JsonConfigHelper
 
     private static Dictionary<string, MarkerLocationData> DefaultMarkerDictionary => new()
     {
-        { "testMarker", new MarkerLocationData(MarkerType.Fortification, 0, 0) },
-        { "testMarker2", new MarkerLocationData(MarkerType.Throne, -100, -100) },
+        { "TestMarker", new MarkerLocationData(MarkerType.Fortification, 0, 0) },
     };
 
     private static Dictionary<string, string> DefaultOnlineMessages => new()

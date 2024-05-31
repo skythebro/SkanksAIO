@@ -1,10 +1,9 @@
-# ☁ SkanksAIO - Gloomrot Update
+# ☁ SkanksAIO - 1.0 update
 Forked from [phillipsOG](https://github.com/phillipsOG/SkanksAIO) and updated to gloomrot, now also updated to 1.0.
+The interactive map now also has the new 1.0 appearance so Ignore the images here those are outdated
 
 A V-Rising mod that connects your server to discord and a webserver plus some extra stuff.
 Please report any issues [here](https://github.com/skythebro/SkanksAIO/issues).
-
-* Now also has discord to ingame chat support
 
 ## Installation
 * Extract and put the **_SkanksAIO_** folder into your `(Vrising Server)\BepInEx\plugins folder.`
@@ -59,7 +58,7 @@ Player stats example:
 
 ![img.png](https://imgur.com/EEWy74t.png)
 
-Check out the map.html.twig file for icon color and size customization (WIP everything is in one file atm, will be split up later)
+Check out the map.html.twig file for icon color and size customization (WIP everything is in one file atm, will be split up later probably?)
 
 ---
 
@@ -386,6 +385,9 @@ InteractiveMapUpdateInterval = 10
 ```
 
 ---
+
+# Support me
+If you like my work and want to support me you can do so by donating to my [Ko-Fi](https://ko-fi.com/realskye)
 
 # Developer & credits
 <details>

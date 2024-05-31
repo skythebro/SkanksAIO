@@ -427,10 +427,15 @@ internal class WebServer
         _listener.BeginGetContext(ListenerCallback, _listener);
     }
 
-    public void OnRequestReceived(HttpListenerContext context)
+    public void OnRequestReceived(HttpListenerContext? context)
     {
         try
         {
+            if (context == null)
+            {
+                Plugin.Logger?.LogWarning("[Webserver] Received null context.");
+                return;
+            }
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
 
